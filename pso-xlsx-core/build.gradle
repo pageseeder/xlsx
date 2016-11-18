@@ -1,0 +1,16 @@
+plugins {
+  id "com.jfrog.bintray" version "1.7"
+}
+
+description = "Core XLSX API"
+
+apply plugin: 'maven-publish'
+apply from: "$rootDir/gradle/publishing.gradle"
+
+dependencies {
+
+  testCompile (
+    'junit:junit:4+'
+  )
+
+}

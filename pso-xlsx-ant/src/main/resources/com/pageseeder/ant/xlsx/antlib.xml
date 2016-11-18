@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Task definitions for this library.
+-->
+<antlib>
+  <taskdef name="import-spreadsheet"  classname="org.pageseeder.xlsx.ant.ImportTask"/>
+  <taskdef name="export-spreadsheet"  classname="org.pageseeder.xlsx.ant.ExportTask"/>
+</antlib>
