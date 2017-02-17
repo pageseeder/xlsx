@@ -142,6 +142,7 @@ public final class XSLT {
       transformer.transform(source, result);
 
     } catch (TransformerException ex) {
+      //Keeping the original error message
       String errorMessage = ex.getMessage();
       if (errorMessage == null || errorMessage.isEmpty()) {
         errorMessage = "Unable to transform ";
