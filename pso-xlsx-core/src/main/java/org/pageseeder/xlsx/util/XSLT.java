@@ -142,7 +142,12 @@ public final class XSLT {
       transformer.transform(source, result);
 
     } catch (TransformerException ex) {
-      throw new XLSXException("Unable to transform ", ex);
+      String errorMessage = ex.getMessage();
+      if (errorMessage == null || errorMessage.isEmpty()) {
+        errorMessage = "Unable to transform ";
+      }
+      
+      throw new XLSXException(errorMessage, ex);
     }
   }
 
