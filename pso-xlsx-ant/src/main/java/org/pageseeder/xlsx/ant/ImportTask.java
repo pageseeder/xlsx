@@ -5,27 +5,19 @@ package org.pageseeder.xlsx.ant;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import javax.xml.transform.Templates;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
-import org.pageseeder.xlsx.Config;
+import org.pageseeder.xlsx.TransformProcessor;
+import org.pageseeder.xlsx.XLSXException;
+import org.pageseeder.xlsx.config.Param;
 import org.pageseeder.xlsx.config.SplitLevel;
-import org.pageseeder.xlsx.core.WorkBook;
-import org.pageseeder.xlsx.core.WorkSheet;
-import org.pageseeder.xlsx.interim.Interim;
-import org.pageseeder.xlsx.util.CoreProperties;
-import org.pageseeder.xlsx.util.Relationship;
-import org.pageseeder.xlsx.util.Relationships;
-import org.pageseeder.xlsx.util.SharedStrings;
-import org.pageseeder.xlsx.util.XML;
-import org.pageseeder.xlsx.util.XSLT;
-import org.pageseeder.xlsx.util.ZipUtils;
+import org.pageseeder.xlsx.config.TransformConfig;
+import org.pageseeder.xlsx.config.TransformConfigBuilder;
 
 /**
  * An ANT task to import a Excel Spreadsheet as a single or multiple PageSeeder documents.
@@ -47,30 +39,32 @@ public final class ImportTask extends Task {
 
   };
 
-  /**
-   * The PowerPoint Presentation to import.
-   */
-  private File _source;
+  private TransformConfigBuilder builder = new TransformConfigBuilder();
 
-  /**
-   * Where to create the PageSeeder documents (a directory).
-   */
-  private File _destination;
-
-  /**
-   * The name of the working directory
-   */
-  private File _working;
-  
-  /**
-   * whether support rich text
-   */
-  private boolean _richtext;
-
-  /**
-   * The configuration.
-   */
-  private Config _config = new Config();
+//  /**
+//   * The PowerPoint Presentation to import.
+//   */
+//  private File _source;
+//
+//  /**
+//   * Where to create the PageSeeder documents (a directory).
+//   */
+//  private File _destination;
+//
+//  /**
+//   * The name of the working directory
+//   */
+//  private File _working;
+//
+//  /**
+//   * whether support rich text
+//   */
+//  private boolean _richtext;
+//
+//  /**
+//   * The configuration.
+//   */
+//  private Config _config = new Config();
 
   /**
    * List of parameters specified for the transformation into PSXML
@@ -96,7 +90,7 @@ public final class ImportTask extends Task {
     if (!name.endsWith(".xlsx") && !name.endsWith(".zip")) {
       log("presentation file should generally end with .pptx or .zip - but was "+name);
     }
-    this._source = spreadsheet;
+    this.builder.input(spreadsheet);
   }
 
   /**
@@ -105,7 +99,7 @@ public final class ImportTask extends Task {
    * @param destination The destination folder.
    */
   public void setDest(File destination) {
-    this._destination = destination;
+    this.builder.destination(destination);
   }
 
   /**
@@ -114,23 +108,16 @@ public final class ImportTask extends Task {
    * @param working The working folder.
    */
   public void setWorking(File working) {
-    if (working.exists() && !working.isDirectory()) {
-      throw new BuildException("if working folder exists, it must be a directory");
-    }
-    this._working = working;
+    this.builder.working(working);
   }
 
   /**
    * Set the working folder (optional).
    *
-   * @param working The working folder.
+   * @param richtext The richtext verify if it a specific format.
    */
   public void setRichText(boolean richtext) {
-    if (richtext){
-      this._richtext = true;
-    } else {
-    this._richtext = false;
-    }
+    this.builder.richtext(richtext);
   }
 
   /**
@@ -139,7 +126,7 @@ public final class ImportTask extends Task {
    * @param level the level at which it should be split.
    */
   public void setSplitLevel(SplitLevel level) {
-    this._config.setSplitLevel(level);
+    this.builder.level(level);
   }
 
   /**
@@ -148,7 +135,7 @@ public final class ImportTask extends Task {
    * @param xslt the XSLT to use to transform the interim format into PSXML.
    */
   public void setTemplates(File xslt) {
-    this._config.setTemplates(xslt);
+    this.builder.transform(xslt);
   }
 
   /**
@@ -167,7 +154,7 @@ public final class ImportTask extends Task {
    *            <code>false</code> otherwise.
    */
   public void setHeaders(boolean yes) {
-    this._config.setHeaders(yes);
+    this.builder.headers(yes);
   }
 
   /**
@@ -176,28 +163,37 @@ public final class ImportTask extends Task {
    * @param column the column to use as the filename for each row (split by row only).
    */
   public void setFilenameColumn(int column) {
-    this._config.setFilenameColumn(column);
+    this.builder.filenameColumn(column);
   }
 
   /**
    * @param type the document type to use for a workbook document
+   *
+   * @deprecated you should use setWorkbookDoctype
    */
   public void setBookDoctype(String type) {
-    this._config.setBookDoctype(type);
+    this.setWorkbookDoctype(type);
+  }
+
+  /**
+   * @param workbookDoctype the document workbookDoctype to use for a workbook document
+   */
+  public void setWorkbookDoctype(String workbookDoctype) {
+    this.builder.workbookDoctype(workbookDoctype);
   }
 
   /**
    * @param type the document type to use for a worksheet document
    */
   public void setSheetDoctype(String type) {
-    this._config.setSheetDoctype(type);
+    this.builder.sheetDoctype(type);
   }
 
   /**
    * @param type the document type to use for a row document
    */
   public void setRowDoctype(String type) {
-    this._config.setRowDoctype(type);
+    this.builder.rowDoctype(type);
   }
 
   // Execute
@@ -205,212 +201,223 @@ public final class ImportTask extends Task {
 
   @Override
   public void execute() throws BuildException {
-    if (this._source == null)
-      throw new BuildException("Source presentation must be specified using 'src' attribute");
-
-    // Defaulting working directory
-    if (this._working == null) this._working = getDefaultWorkingFolder();
-    if (!this._working.exists()) this._working.mkdirs();
-
-    // Defaulting destination directory
-    if (this._destination == null) {
-      this._destination = this._source.getParentFile();
-      log("Destination set to source directory "+this._destination.getAbsolutePath()+"");
-    }
-    
-    // Rich text support
-    log("Supporting Rich Text: "+ this._richtext );
-    
-    // Check ignored options
-    if (this._config.getSplitLevel() != SplitLevel.row) {
-      if (this._config.getFilenameColumn() > 0) {
-        log("Setting the column filename has no effect when split level != row");
-      }
-    }
-
-    // The folder and name of the presentation
-    File folder = null;
-    String name = null;
-    if (this._destination.getName().indexOf('.') > 0) {
-      folder = this._destination.getParentFile();
-      name = this._destination.getName();
-      if (name.endsWith(XML.XML_EXTENSION)) name = name.substring(0, name.length()-XML.XML_EXTENSION.length());
-    } else {
-      folder = this._destination;
-      name = this._source.getName();
-      if (name.endsWith(".xlsx")) name = name.substring(0, name.length()-5);
-    }
-
-    // 1. Unzip file
-    log("Extracting Excel Spreadsheet: " + this._source.getName());
-    File unpacked = new File(this._working, "unpacked");
-    unpacked.mkdir();
-    ZipUtils.unzip(this._source, unpacked);
-
-    // 2. Extract core properties
-    log("Extracting Core document properties");
-    CoreProperties core = CoreProperties.parse(new File(unpacked, "docProps/core.xml"));
-    String title = core.title();
-
-    // 3. Generating interim data
-    log("Generating interim data");
-    File interim = new File(this._working, "interim");
-    interim.mkdir();
-    
-    // TODO need to do a automatic detect in order switch between XSLT and SAX
-    if (!this._richtext) {
-      log("Interim will be generated by SAX, richtext will be IGNORED.");
-      generateInterimBySax(unpacked, interim, this._config, title != null? title : name);
-    } else {
-      log("Interim will be generated by XSLT, richtext will be SUPPORTED." , 1);
-      generateInterimByXSLT(unpacked, interim, this._config, title != null? title : name);
-    }
-
-    // 4. Convert rows to PSXML
-    log("Converting interim data to PSXML");
-    interimToPSXML(interim, folder, this._config, this._parameters );
-
-  }
-
-  /**
-   * Generate the interim files.
-   *
-   * @param unpacked The folder containing the unzipped workbook.
-   * @param interim  The folder that should contain the interim simpler format.
-   * @param config   The configuration.
-   * @param title    The title of the workbook
-   */
-  private static void generateInterimByXSLT(File unpacked, File interim, Config config, String title) {
-
-    // Creates files and folders
-    File xlWorkbookFolder = new File(unpacked, "/xl");
-    File xlWorkbook = new File(xlWorkbookFolder, "workbook.xml");
-    File itWorkbook = new File(interim, "workbook.xml");
-    if (!interim.exists() && !interim.mkdirs())
-      throw new BuildException("Unable to create interim directory structure.");
-
-    // Parse templates
-    Templates templates = XSLT.getTemplatesFromResource("org/pageseeder/xlsx/xslt/split-workbook.xsl");
-    String relationships = xlWorkbookFolder.toURI().toString()+"_rels/workbook.xml.rels";
-    String outuri = interim.toURI().toString();
-
-    // Initiate parameters
-    Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("_relationships", relationships);
-    parameters.put("_outputfolder", outuri);
-    parameters.put("_booktitle", title);
-    parameters.put("_splitlevel", config.getSplitLevel().toString());
-    parameters.put("_hasheaders", Boolean.toString(config.hasHeaders()));
-    parameters.put("_filenamecolumn", Integer.toString(config.getFilenameColumn()));
-
-    // Transform
-    XSLT.transform(xlWorkbook, itWorkbook, templates, parameters);
-  }
-
-
-  /**
-   * Generate the interim files.
-   *
-   * @param unpacked The folder containing the unzipped workbook.
-   * @param interim  The folder that should contain the interim simpler format.
-   * @param config   The configuration.
-   * @param title    The title of the workbook
-   */
-  private static void generateInterimBySax(File unpacked, File interim, Config config, String title) {
-
-    // Creates files and folders
-    File xlWorkbookFolder = new File(unpacked, "/xl");
-    File xlWorkbook = new File(xlWorkbookFolder, "workbook.xml");
-//    File itWorkbook = new File(interim, "workbook.xml");
-    if (!interim.exists() && !interim.mkdirs())
-      throw new BuildException("Unable to create interim directory structure.");
-
-    // Parse relationships
-    Relationships relationships = Relationships.parse(new File(xlWorkbookFolder, "_rels/workbook.xml.rels"));
-
     try {
-      // Parse shared strings
-      SharedStrings shared = null;
-      for (Relationship r : relationships.forType(Relationship.Type.sharedStrings)) {
-        shared = SharedStrings.parse(new File(xlWorkbookFolder, r.target()));
-      }
-
-      // Parse workbook
-      WorkBook workbook = WorkBook.parse(xlWorkbook, relationships);
-      workbook.setTitle(title);
-
-      // Inspect
-      for (WorkSheet sheet : workbook.sheets()) {
-        sheet.inspect();
-      }
-
-      // Generate the interim data
-      Interim processor = new Interim(interim, config);
-      processor.process(workbook, shared);
-
-    } catch (Exception ex) {
-      ex.printStackTrace();
+      this.builder.parameters(this._parameters);
+      TransformConfig config = this.builder.build();
+      StringWriter writer = new StringWriter();
+      TransformProcessor processor = new TransformProcessor(config, writer);
+      processor.process();
+      log(writer.toString());
+    } catch (XLSXException | IllegalArgumentException | IOException ex) {
+      throw new BuildException(ex);
     }
+
+//    if (this._source == null)
+//      throw new BuildException("Source presentation must be specified using 'src' attribute");
+//
+//    // Defaulting working directory
+//    if (this._working == null) this._working = getDefaultWorkingFolder();
+//    if (!this._working.exists()) this._working.mkdirs();
+//
+//    // Defaulting destination directory
+//    if (this._destination == null) {
+//      this._destination = this._source.getParentFile();
+//      log("Destination set to source directory "+this._destination.getAbsolutePath()+"");
+//    }
+//
+//    // Rich text support
+//    log("Supporting Rich Text: "+ this._richtext );
+//
+//    // Check ignored options
+//    if (this._config.getSplitLevel() != SplitLevel.row) {
+//      if (this._config.getFilenameColumn() > 0) {
+//        log("Setting the column filename has no effect when split level != row");
+//      }
+//    }
+
+//    // The folder and name of the presentation
+//    File folder = null;
+//    String name = null;
+//    if (this._destination.getName().indexOf('.') > 0) {
+//      folder = this._destination.getParentFile();
+//      name = this._destination.getName();
+//      if (name.endsWith(XML.XML_EXTENSION)) name = name.substring(0, name.length()-XML.XML_EXTENSION.length());
+//    } else {
+//      folder = this._destination;
+//      name = this._source.getName();
+//      if (name.endsWith(".xlsx")) name = name.substring(0, name.length()-5);
+//    }
+//
+//    // 1. Unzip file
+//    log("Extracting Excel Spreadsheet: " + this._source.getName());
+//    File unpacked = new File(this._working, "unpacked");
+//    unpacked.mkdir();
+//    ZipUtils.unzip(this._source, unpacked);
+//
+//    // 2. Extract core properties
+//    log("Extracting Core document properties");
+//    CoreProperties core = CoreProperties.parse(new File(unpacked, "docProps/core.xml"));
+//    String title = core.title();
+//
+//    // 3. Generating interim data
+//    log("Generating interim data");
+//    File interim = new File(this._working, "interim");
+//    interim.mkdir();
+//
+//    // TODO need to do a automatic detect in order switch between XSLT and SAX
+//    if (!this._richtext) {
+//      log("Interim will be generated by SAX, richtext will be IGNORED.");
+//      generateInterimBySax(unpacked, interim, this._config, title != null? title : name);
+//    } else {
+//      log("Interim will be generated by XSLT, richtext will be SUPPORTED." , 1);
+//      generateInterimByXSLT(unpacked, interim, this._config, title != null? title : name);
+//    }
+//
+//    // 4. Convert rows to PSXML
+//    log("Converting interim data to PSXML");
+//    interimToPSXML(interim, folder, this._config, this._parameters );
+
   }
 
-  /**
-   * Generate the interim files.
-   *
-   * @param interim The folder that should contain the interim simpler format.
-   * @param output  The output folder where the PSXML should be stored
-   * @param config  The configuration.
-   */
-  private static void interimToPSXML(File interim, File output, Config config, List<Param> params) {
-
-    // Creates files and folders
-    if (!output.exists() && !output.mkdirs())
-      throw new BuildException("Unable to create output folder "+output.getName());
-
-    // Get the templates
-    Templates templates = config.getTemplates();
-
-    // Initiate parameters
-    Map<String, String> parameters = new HashMap<String, String>();
-    // add parameters from the ANT task
-    for (Param p : params) {
-      parameters.put(p.getName(), p.getValue());
-    }
-    // add built in
-    parameters.put("_rowdoctype",   config.getRowDoctype());
-    parameters.put("_sheetdoctype", config.getSheetDoctype());
-    parameters.put("_bookdoctype",  config.getBookDoctype());
-    parameters.put("_output",       output.toURI().toString());
-
-    // Transform Workbook / WorkSheet
-    for (File itf : interim.listFiles(XML.getFileFilter())) {
-      File target = new File(output, itf.getName());
-      XSLT.transform(itf, target, templates, parameters);
-    }
-
-    // Transform Rows
-    for (File sheet : interim.listFiles(DIR_FILTER)) {
-      File targetFolder = new File(output, sheet.getName());
-      if (!targetFolder.exists()) targetFolder.mkdir();
-      for (File itf : sheet.listFiles(XML.getFileFilter())) {
-        File target = new File(targetFolder, itf.getName());
-        XSLT.transform(itf, target, templates, parameters);
-      }
-    }
-
-  }
-
-  // Helpers
-  // ----------------------------------------------------------------------------------------------
-
-  /**
-   * @return the default working folder.
-   */
-  private static File getDefaultWorkingFolder() {
-    String tmp = "psantpptx-"+System.currentTimeMillis();
-    return new File(System.getProperty("java.io.tmpdir"), tmp);
-  }
-  
-  // Parameter inner class
-  // ----------------------------------------------------------------------------------------------
+//  /**
+//   * Generate the interim files.
+//   *
+//   * @param unpacked The folder containing the unzipped workbook.
+//   * @param interim  The folder that should contain the interim simpler format.
+//   * @param config   The configuration.
+//   * @param title    The title of the workbook
+//   */
+//  private static void generateInterimByXSLT(File unpacked, File interim, Config config, String title) {
+//
+//    // Creates files and folders
+//    File xlWorkbookFolder = new File(unpacked, "/xl");
+//    File xlWorkbook = new File(xlWorkbookFolder, "workbook.xml");
+//    File itWorkbook = new File(interim, "workbook.xml");
+//    if (!interim.exists() && !interim.mkdirs())
+//      throw new BuildException("Unable to create interim directory structure.");
+//
+//    // Parse templates
+//    Templates templates = XSLT.getTemplatesFromResource("org/pageseeder/xlsx/xslt/split-workbook.xsl");
+//    String relationships = xlWorkbookFolder.toURI().toString()+"_rels/workbook.xml.rels";
+//    String outuri = interim.toURI().toString();
+//
+//    // Initiate parameters
+//    Map<String, String> parameters = new HashMap<String, String>();
+//    parameters.put("_relationships", relationships);
+//    parameters.put("_outputfolder", outuri);
+//    parameters.put("_booktitle", title);
+//    parameters.put("_splitlevel", config.getSplitLevel().toString());
+//    parameters.put("_hasheaders", Boolean.toString(config.hasHeaders()));
+//    parameters.put("_filenamecolumn", Integer.toString(config.getFilenameColumn()));
+//
+//    // Transform
+//    XSLT.transform(xlWorkbook, itWorkbook, templates, parameters);
+//  }
+//
+//
+//  /**
+//   * Generate the interim files.
+//   *
+//   * @param unpacked The folder containing the unzipped workbook.
+//   * @param interim  The folder that should contain the interim simpler format.
+//   * @param config   The configuration.
+//   * @param title    The title of the workbook
+//   */
+//  private static void generateInterimBySax(File unpacked, File interim, TransformConfig config, String title) {
+//
+//    // Creates files and folders
+//    File xlWorkbookFolder = new File(unpacked, "/xl");
+//    File xlWorkbook = new File(xlWorkbookFolder, "workbook.xml");
+////    File itWorkbook = new File(interim, "workbook.xml");
+//    if (!interim.exists() && !interim.mkdirs())
+//      throw new BuildException("Unable to create interim directory structure.");
+//
+//    // Parse relationships
+//    Relationships relationships = Relationships.parse(new File(xlWorkbookFolder, "_rels/workbook.xml.rels"));
+//
+//    try {
+//      // Parse shared strings
+//      SharedStrings shared = null;
+//      for (Relationship r : relationships.forType(Relationship.Type.sharedStrings)) {
+//        shared = SharedStrings.parse(new File(xlWorkbookFolder, r.target()));
+//      }
+//
+//      // Parse workbook
+//      WorkBook workbook = WorkBook.parse(xlWorkbook, relationships);
+//      workbook.setTitle(title);
+//
+//      // Inspect
+//      for (WorkSheet sheet : workbook.sheets()) {
+//        sheet.inspect();
+//      }
+//
+//      // Generate the interim data
+//      Interim processor = new Interim(interim, config);
+//      processor.process(workbook, shared);
+//
+//    } catch (Exception ex) {
+//      ex.printStackTrace();
+//    }
+//  }
+//
+//  /**
+//   * Generate the interim files.
+//   *
+//   * @param interim The folder that should contain the interim simpler format.
+//   * @param output  The output folder where the PSXML should be stored
+//   * @param config  The configuration.
+//   */
+//  private static void interimToPSXML(File interim, File output, Config config, List<Param> params) {
+//
+//    // Creates files and folders
+//    if (!output.exists() && !output.mkdirs())
+//      throw new BuildException("Unable to create output folder "+output.getName());
+//
+//    // Get the templates
+//    Templates templates = config.getTemplates();
+//
+//    // Initiate parameters
+//    Map<String, String> parameters = new HashMap<String, String>();
+//    // add parameters from the ANT task
+//    for (Param p : params) {
+//      parameters.put(p.getName(), p.getValue());
+//    }
+//    // add built in
+//    parameters.put("_rowdoctype",   config.getRowDoctype());
+//    parameters.put("_sheetdoctype", config.getSheetDoctype());
+//    parameters.put("_bookdoctype",  config.getBookDoctype());
+//    parameters.put("_output",       output.toURI().toString());
+//
+//    // Transform Workbook / WorkSheet
+//    for (File itf : interim.listFiles(XML.getFileFilter())) {
+//      File target = new File(output, itf.getName());
+//      XSLT.transform(itf, target, templates, parameters);
+//    }
+//
+//    // Transform Rows
+//    for (File sheet : interim.listFiles(DIR_FILTER)) {
+//      File targetFolder = new File(output, sheet.getName());
+//      if (!targetFolder.exists()) targetFolder.mkdir();
+//      for (File itf : sheet.listFiles(XML.getFileFilter())) {
+//        File target = new File(targetFolder, itf.getName());
+//        XSLT.transform(itf, target, templates, parameters);
+//      }
+//    }
+//
+//  }
+//
+//  // Helpers
+//  // ----------------------------------------------------------------------------------------------
+//
+//  /**
+//   * @return the default working folder.
+//   */
+//  private static File getDefaultWorkingFolder() {
+//    String tmp = "psantpptx-"+System.currentTimeMillis();
+//    return new File(System.getProperty("java.io.tmpdir"), tmp);
+//  }
+//
+//  // Parameter inner class
+//  // ----------------------------------------------------------------------------------------------
 
 }
