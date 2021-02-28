@@ -1,4 +1,6 @@
 rootProject.name = 'pso-xlsx'
 
 include ':pso-xlsx-core'
-include ':pso-xlsx-ant' 
+include ':pso-xlsx-ant'
+include ':pso-xlsx-ox'
+
