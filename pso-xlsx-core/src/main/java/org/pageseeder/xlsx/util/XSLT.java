@@ -124,7 +124,7 @@ public final class XSLT {
    * @param templates  The XSLT templates to use.
    * @param parameters Parameters to transmit to the transformer for use by the stylesheet (optional)
    *
-   * @throws BuildException For XSLT Transformation errors or XSLT configuration errors
+   * @throws XLSXException For XSLT Transformation errors or XSLT configuration errors
    */
   public static void transform(Source source, Result result, Templates templates, Map<String, String> parameters) {
     try {
@@ -162,7 +162,7 @@ public final class XSLT {
    *
    * @return the corresponding XSLT templates object
    *
-   * @throws BuildException If the loading fails.
+   * @throws XLSXException If the loading fails.
    */
   private static Templates toTemplates(File stylepath) {
     // load the templates from the source file
@@ -184,7 +184,7 @@ public final class XSLT {
    *
    * @return the corresponding XSLT templates object or <code>null</code> if the URL was <code>null</code>.
    *
-   * @throws BuildException If XSLT templates could not be loaded from the specified URL.
+   * @throws XLSXException If XSLT templates could not be loaded from the specified URL.
    */
   private static Templates toTemplates(URL url) {
     if (url == null) return null;
