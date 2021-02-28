@@ -14,3 +14,7 @@ hs_err_pid*
 /.settings/
 /.gradle/
 /.classpath
+/.idea/
+/pso-xlsx-ant/build/
+/pso-xlsx-core/build/
+/pso-xlsx-ox/build/
