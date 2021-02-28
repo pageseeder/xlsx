@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.pageseeder.xlsx.Config;
+import org.pageseeder.xlsx.config.TransformConfig;
 import org.pageseeder.xlsx.XLSXException;
 import org.pageseeder.xlsx.config.SplitLevel;
 import org.pageseeder.xlsx.core.WorkBook;
@@ -41,14 +41,14 @@ public final class Interim {
   /**
    * The configuration.
    */
-  private Config _config;
+  private TransformConfig _config;
 
   /**
    *
    * @param output The output directory.
    * @param config The configuration.
    */
-  public Interim(File output, Config config) {
+  public Interim(File output, TransformConfig config) {
     this._output = output;
     this._config = config;
   }
@@ -202,7 +202,7 @@ public final class Interim {
      * @param shared the shared strings to resolve the values.
      * @param config the configuration.
      */
-    public Processor(WorkBook book, WorkSheet sheet, SharedStrings shared, Config config, Appendable xml) {
+    public Processor(WorkBook book, WorkSheet sheet, SharedStrings shared, TransformConfig config, Appendable xml) {
       this._book = book;
       this._sheet = sheet;
       this._shared = shared;

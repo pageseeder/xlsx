@@ -17,7 +17,7 @@
 <xsl:param name="_sheetdoctype" />
 
 <!-- Document type for a workbook -->
-<xsl:param name="_bookdoctype" />
+<xsl:param name="_workbookdoctype" />
 
 <!-- We produce XML in utf-8 -->
 <xsl:output encoding="UTF-8" method="xml" indent="yes" />
@@ -30,11 +30,11 @@
   1 Workbook = 1 Standard document with tables 
 -->
 <xsl:template match="workbook[worksheet/row]">
-<xsl:sequence select="f:ps-pi($_bookdoctype, @title)"/>
+<xsl:sequence select="f:ps-pi($_workbookdoctype, @title)"/>
 <root>
-<xsl:if test="$_bookdoctype != 'standard'">
+<xsl:if test="$_workbookdoctype != 'standard'">
   <properties>
-     <property name="document-type"><xsl:value-of select="$_bookdoctype"/></property>
+     <property name="document-type"><xsl:value-of select="$_workbookdoctype"/></property>
   </properties>
 </xsl:if>
   <section id="title">
@@ -120,11 +120,11 @@
 -->
 <xsl:template match="workbook[worksheet/@href]
                    | worksheet[row/@href]">
-<xsl:sequence select="f:ps-pi($_bookdoctype, @title)"/>
+<xsl:sequence select="f:ps-pi($_workbookdoctype, @title)"/>
 <root>
-  <xsl:if test="self::workbook and $_bookdoctype != 'standard'">
+  <xsl:if test="self::workbook and $_workbookdoctype != 'standard'">
     <properties>
-      <property name="document-type"><xsl:value-of select="$_bookdoctype"/></property>
+      <property name="document-type"><xsl:value-of select="$_workbookdoctype"/></property>
     </properties>
   </xsl:if>
   <xsl:if test="self::worksheet and $_sheetdoctype != 'standard'">
