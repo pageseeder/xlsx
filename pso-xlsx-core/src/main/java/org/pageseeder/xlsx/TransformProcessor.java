@@ -252,10 +252,20 @@ public class TransformProcessor {
     for (Param p : params) {
       parameters.put(p.getName(), p.getValue());
     }
+
     // add built in
-    parameters.put("_rowdoctype",   config.getRowDoctype());
-    parameters.put("_sheetdoctype", config.getSheetDoctype());
-    parameters.put("_bookdoctype",  config.getWorkbookDoctype());
+    if (config.getRowDoctype() != null) {
+      parameters.put("_rowdoctype", config.getRowDoctype());
+    }
+
+    if (config.getSheetDoctype() != null) {
+      parameters.put("_sheetdoctype", config.getSheetDoctype());
+    }
+
+    if (config.getWorkbookDoctype() != null) {
+      parameters.put("_workbookdoctype", config.getWorkbookDoctype());
+    }
+
     parameters.put("_output",       output.toURI().toString());
 
     // Transform Workbook / WorkSheet

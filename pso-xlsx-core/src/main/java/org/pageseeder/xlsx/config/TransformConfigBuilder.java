@@ -6,6 +6,7 @@ package org.pageseeder.xlsx.config;
 import org.pageseeder.xlsx.util.ToolUtils;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 public class TransformConfigBuilder {
@@ -153,6 +154,8 @@ public class TransformConfigBuilder {
     if (this.destination == null && this.input != null) this.destination = this.input.getParentFile();
 
     if (this.level == null) this.level = SplitLevel.row;
+
+    if (this.parameters == null) this.parameters = Collections.emptyList();
 
   }
 }
