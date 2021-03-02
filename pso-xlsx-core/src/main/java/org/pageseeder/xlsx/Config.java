@@ -26,9 +26,9 @@ public final class Config {
   private SplitLevel _level = SplitLevel.row;
 
   /**
-   * The path to the file to use to transform into PSXML.
+   * The path to the file to use to xslt into PSXML.
    */
-  private File _transform;
+  private File _xslt;
 
   /**
    * Whether to use the first row as headers.
@@ -76,7 +76,7 @@ public final class Config {
    * @param xslt the XSLT to use to transform the interim format into PSXML.
    */
   public void setTemplates(File xslt) {
-    this._transform = xslt;
+    this._xslt = xslt;
   }
 
   /**
@@ -145,16 +145,16 @@ public final class Config {
    *         <code>null</code> if using default templates.
    */
   public File getTemplatesFile() {
-    return this._transform;
+    return this._xslt;
   }
 
   /**
    * @return the Templates to turn into PSXML.
    */
   public Templates getTemplates() {
-    if (this._transform != null) {
+    if (this._xslt != null) {
       try {
-        return XSLT.getTemplates(this._transform.toURI().toURL());
+        return XSLT.getTemplates(this._xslt.toURI().toURL());
       } catch (MalformedURLException ex) {
         throw new XLSXException(ex);
       }

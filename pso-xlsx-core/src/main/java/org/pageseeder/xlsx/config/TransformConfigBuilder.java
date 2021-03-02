@@ -64,7 +64,7 @@ public class TransformConfigBuilder {
   /**
    * The path to the file to use to transform into PSXML.
    */
-  private File transform;
+  private File xslt;
 
   /**
    * List of parameters specified for the transformation into PSXML
@@ -126,8 +126,8 @@ public class TransformConfigBuilder {
     return this;
   }
 
-  public TransformConfigBuilder transform (File transform) {
-    this.transform = transform;
+  public TransformConfigBuilder xslt (File xslt) {
+    this.xslt = xslt;
     return this;
   }
 
@@ -140,7 +140,7 @@ public class TransformConfigBuilder {
     this.setupMissingValuesToDefault();
 
     return new TransformConfig(this.input, this.working, this.destination, this.richtext,
-        this.level, this.filenameColumn, this.headers, this.rowDoctype, this.sheetDoctype, this.workbookDoctype, this.transform, this.parameters);
+        this.level, this.filenameColumn, this.headers, this.rowDoctype, this.sheetDoctype, this.workbookDoctype, this.xslt, this.parameters);
   }
 
   private void setupMissingValuesToDefault () {

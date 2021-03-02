@@ -30,14 +30,14 @@ public final class ImportTask extends Task {
   /**
    * Filters directories.
    */
-  private static final FileFilter DIR_FILTER = new FileFilter() {
+/*  private static final FileFilter DIR_FILTER = new FileFilter() {
 
     @Override
     public boolean accept(File f) {
       return f.isDirectory();
     }
 
-  };
+  };*/
 
   private TransformConfigBuilder builder = new TransformConfigBuilder();
 
@@ -135,7 +135,7 @@ public final class ImportTask extends Task {
    * @param xslt the XSLT to use to transform the interim format into PSXML.
    */
   public void setTemplates(File xslt) {
-    this.builder.transform(xslt);
+    this.builder.xslt(xslt);
   }
 
   /**

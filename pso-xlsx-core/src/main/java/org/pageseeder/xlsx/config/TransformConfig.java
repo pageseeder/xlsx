@@ -73,9 +73,9 @@ public final class TransformConfig {
   private final String _workbookDoctype;
 
   /**
-   * The path to the file to use to transform into PSXML.
+   * The path to the file to use to xslt into PSXML.
    */
-  private final File _transform;
+  private final File _xslt;
 
   /**
    * List of parameters specified for the transformation into PSXML
@@ -87,7 +87,7 @@ public final class TransformConfig {
    * Creates a new configuration.
    */
   public TransformConfig(File input, File working, File destination, boolean richtext, SplitLevel level, int filenameColumn,
-                         boolean headers, String rowDoctype, String sheetDoctype, String workbookDoctype, File transform, List parameters) {
+                         boolean headers, String rowDoctype, String sheetDoctype, String workbookDoctype, File xslt, List parameters) {
     this._input = input;
     this._working = working;
     this._destination = destination;
@@ -98,7 +98,7 @@ public final class TransformConfig {
     this._rowDoctype = rowDoctype;
     this._sheetDoctype = sheetDoctype;
     this._workbookDoctype = workbookDoctype;
-    this._transform = transform;
+    this._xslt = xslt;
     this._parameters = parameters;
   }
 
@@ -161,11 +161,11 @@ public final class TransformConfig {
   }
 
   /**
-   * @return the XSLT to use to transform the interim format into PSXML;
+   * @return the XSLT to use to xslt the interim format into PSXML;
    *         <code>null</code> if using default templates.
    */
   public File getTemplatesFile() {
-    return this._transform;
+    return this._xslt;
   }
 
   /**
@@ -179,9 +179,9 @@ public final class TransformConfig {
    * @return the Templates to turn into PSXML.
    */
   public Templates getTemplates() {
-    if (this._transform != null) {
+    if (this._xslt != null) {
       try {
-        return XSLT.getTemplates(this._transform.toURI().toURL());
+        return XSLT.getTemplates(this._xslt.toURI().toURL());
       } catch (MalformedURLException ex) {
         throw new XLSXException(ex);
       }
