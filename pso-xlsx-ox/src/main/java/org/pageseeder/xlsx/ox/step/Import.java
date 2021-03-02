@@ -6,22 +6,36 @@ import org.pageseeder.ox.api.StepInfo;
 import org.pageseeder.ox.core.Model;
 import org.pageseeder.ox.core.PackageData;
 import org.pageseeder.ox.tool.DefaultResult;
-import org.pageseeder.ox.tool.InvalidResult;
 import org.pageseeder.ox.util.FileUtils;
 import org.pageseeder.ox.util.StepUtils;
 import org.pageseeder.ox.util.StringUtils;
-import org.pageseeder.xmlwriter.XML;
-import org.pageseeder.xmlwriter.XMLStringWriter;
+import org.pageseeder.xlsx.TransformProcessor;
+import org.pageseeder.xlsx.config.SplitLevel;
+import org.pageseeder.xlsx.config.TransformConfig;
+import org.pageseeder.xlsx.config.TransformConfigBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ *
+ * <h3>Step Parameters</h3>
+ * <ul>
+ *  <li><var>input</var> .</li>
+ *  <li><var>output</var> .</li>
+ *  <li><var>richtext</var> .</li>
+ *  <li><var>split-level</var> .</li>
+ *  <li><var>headers</var> .</li>
+ *  <li><var>file-name-column</var> .</li>
+ *  <li><var>working-dir</var> .</li>
+ *  <li><var>xslt</var> .</li>
+ * </ul>
+ *
+ *
+ */
 public class Import implements Step {
 
   private static Logger LOGGER = LoggerFactory.getLogger(Import.class);
@@ -32,64 +46,39 @@ public class Import implements Step {
     File input = StepUtils.getInput(data, info);
     File output = StepUtils.getOutput(data, info, input);
 
-    /* Default: all recursive folders and files. If it is added you can use a glob pattern. */
-    String headerRowParam = info.getParameter("header-row", "1");
-    String valuesRowParam = info.getParameter("values-row", "2");
-    String sheetNameParam = info.getParameter("sheet-name", "'Sheet1'");
-
-    //## Handle the transformation file
-    File xsl = getXSLFile(input.getParentFile(), model, data, info);
-
-    // throw the error
-    if (xsl == null || !xsl.exists()) {
-      return new InvalidResult(model, data).error(new FileNotFoundException("Cannot find the stylesheet file."));
-    }
-
-    /* Valid input : a document */
-    if (input.getName() != null){
-      LOGGER.info(input.getName());
-
-        result = new DefaultResult(model, data, info, output);
-        boolean isInputValid = input != null && input.exists();
-        boolean isOutputValid = output != null;
-        LOGGER.info("Input file {} and output {}. Input valid = {}. Output valid = {}", input, output, isInputValid, isOutputValid);
-        // only process when input is exists
-        if (isInputValid && isOutputValid) {
-          XMLStringWriter writer = new XMLStringWriter(XML.NamespaceAware.No);
-          writer.openElement("files");
-
-          /* Find files and print a element for each file found */
-/*          FilesFinder finder = new FilesFinder(globParam, input);
-          List<File> files = finder.getFiles();
-          for (File inputFile:files) {
-            writer.openElement("file");
-            writer.attribute("path", inputFile.getAbsolutePath());
-            writer.attribute("sort-path", data.getPath(inputFile));
-            writer.closeElement();//file
-          }*/
-
-          writer.closeElement();//files
-          writer.close();
-          try {
-            FileUtils.write(writer.toString(), output);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-        }
-
-
-    }else {
-      LOGGER.error("It is empty input. Please fill the correct input.");
+    try {
+      TransformConfig config = getConfig(model,data,info,input,output);
+      StringWriter writer = new StringWriter();
+      TransformProcessor processor = new TransformProcessor(config, writer);
+      processor.process();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
     return result;
   }
 
-  /* Verify extension document */
-  private static String getFileExtension(File file) {
-    String fileName = file.getName();
-    if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
-      return fileName.substring(fileName.lastIndexOf(".")+1);
-    else return "";
+  private TransformConfig getConfig(Model model, PackageData data, StepInfo info, File input, File output) {
+
+    TransformConfigBuilder builder = new TransformConfigBuilder();
+    builder.input(input);
+    builder.destination(output);
+    builder.richtext("true".equalsIgnoreCase(StepUtils.getParameter(data, info, "richtext", "false")));
+    builder.level(SplitLevel.valueOf(StepUtils.getParameter(data, info, "split-level", "workbook")));
+    builder.headers("true".equalsIgnoreCase(StepUtils.getParameter(data,info, "headers", "false")));
+    builder.filenameColumn(StepUtils.getParameterInt(data,info,"file-name-column",0));
+
+    String workingDirectoryParameter = StepUtils.getParameter(data,info,"working-dir", "");
+    File working = null;
+    if (!StringUtils.isBlank(workingDirectoryParameter)) {
+      working = data.getFile(workingDirectoryParameter);
+    }
+    builder.working(working);
+
+    //## Handle the transformation file
+    File xslt = getXSLFile(input.getParentFile(), model, data, info);
+    builder.xslt(xslt);
+
+    return builder.build();
   }
 
   /**
@@ -102,22 +91,14 @@ public class Import implements Step {
    * @return the XSL file
    */
   private File getXSLFile(File unzipedFolder, Model model, PackageData data, StepInfo info) {
-    String xslParameter = StepUtils.getParameter(data, info, "templates-root", "");
+    String xslParameter = StepUtils.getParameter(data, info, "xslt", "");
     File xsl = null;
     if (!StringUtils.isBlank(xslParameter)) {
       xsl = model.getFile(xslParameter);
       if (xsl == null || !xsl.exists()) {
         xsl = data.getFile(xslParameter);
       }
-    } else if (unzipedFolder.isDirectory()) {
-      List<String> extensions = Arrays.asList("xsl");
-      FileFilter filter = FileUtils.filter(extensions, true);
-      List<File> filesFound = FileUtils.findFiles(unzipedFolder, filter);
-      if (!filesFound.isEmpty()) {
-        xsl = filesFound.get(0);
-      }
     }
     return xsl;
   }
-
 }
