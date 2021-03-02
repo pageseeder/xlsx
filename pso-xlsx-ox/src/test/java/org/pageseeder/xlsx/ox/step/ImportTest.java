@@ -1,130 +1,245 @@
 package org.pageseeder.xlsx.ox.step;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.pageseeder.ox.OXConfig;
 import org.pageseeder.ox.api.Result;
-import org.pageseeder.ox.core.Model;
-import org.pageseeder.ox.core.PackageData;
-import org.pageseeder.ox.core.ResultStatus;
-import org.pageseeder.ox.core.StepInfoImpl;
-import org.pageseeder.ox.step.NOPStep;
 import org.pageseeder.ox.step.StepSimulator;
-import org.pageseeder.ox.step.Transformation;
-import org.pageseeder.ox.util.FileUtils;
-import org.pageseeder.ox.util.ZipUtils;
-import org.pageseeder.ox.xml.utils.XMLComparator;
-import org.pageseeder.xmlwriter.XML;
-import org.pageseeder.xmlwriter.XMLStringWriter;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public class ImportTest {
-  private static final File XLSX = new File("src/test/resources/org/pageseeder/xlsx/ox/step/import/sample.xlsx");
-/*    String input = "src/test/resources/org/pageseeder/xlsx/ox/step/import/test.xlsx";
-    File inputFile = new File(input);
-    String output = "src/test/resources/org/pageseeder/xlsx/ox/step/import/output";*/
+  public class ImportTest {
+    private static final String DEFAULT_OUTPUT_ROOT_FOLDER = "output";
+    private static final File XLSX_UPLOAD_FILE = new File("src/test/resources/org/pageseeder/xlsx/ox/step/import/sample.xlsx");
+    private static final String XLSX_PATH_FILE = "src/test/resources/org/pageseeder/xlsx/ox/step/import/models/default/copy.xsl";
 
-  @Before
-  public void init() {
-    File modelDir = new File("src/test/resources/org/pageseeder/xlsx/ox/step/import/models");
-    OXConfig.get().setModelsDirectory(modelDir);
-  }
-
-//  @Test
-//  public void test_process() throws IOException {
-//    File source = new File("src/test/resources/org/pageseeder/xslx/ox/step/import/sample.xlsx");
-//    File targetExpected = new File("src/test/resources/org/pageseeder/xslx/ox/step/import/output");
-//    File resultExpected = new File("src/test/resources/org/pageseeder/xslx/ox/step/import/result/result.xml");
-//    String outputName = "/output";
-//
-//    Model model = new Model("common");
-//    PackageData data = PackageData.newPackageData("Import", source);
-//    Map<String, String> params = new HashMap<>();
-//    params.put("input", "sample.xml");
-//    params.put("output", outputName);
-//    params.put("xsl", "workbook-to-curriculum-codes.xsl");
-//    params.put("header-row", "1");
-//    params.put("values-row", "2");
-//    params.put("sheet-name", "'Sheet1'");
-//    params.put("templates-root", "");
-//    StepInfoImpl info = new StepInfoImpl("step-id", "step name", "", "sample.xml", params);
-//
-//    Transformation step = new Transformation();
-//    Result result = step.process(model, data, info);
-//    XMLStringWriter xmlWriter = new XMLStringWriter(XML.NamespaceAware.No);
-//    result.toXML(xmlWriter);
-//
-//    xmlWriter.flush();
-//    xmlWriter.close();
-//    Assert.assertEquals(ResultStatus.OK, result.status());
-//    File targetCreated = data.getFile(outputName);
-//    String resultXML = xmlWriter.toString();
-//
-//
-//    Assert.assertEquals(ResultStatus.OK, result.status());
-//    List<String> attributesToIgnore = Arrays.asList("id", "time");
-//    validateResult(targetExpected, resultExpected, targetCreated, resultXML, attributesToIgnore);
-//  }
+    @Before
+    public void init() {
+      File modelDir = new File("src/test/resources/org/pageseeder/xlsx/ox/step/import/models");
+      OXConfig.get().setModelsDirectory(modelDir);
+    }
 
     @Test
-    public void process(){
+    public void testDefaultConfiguration(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/default";
+      String modelName = "default";
 
-      try {
-        String input = "test.xlsx";
-        File inputFile = new File(input);
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", null);
+    }
 
-        //String input = "src/test/resources/org/pageseeder/xlsx/ox/step/import/test.xlsx";
-        String output = "output";
-        String modelName = "default";
-        Map<String, String> requestParameter = new HashMap<>();
-        requestParameter.put("header-row", "1");
-        requestParameter.put("values-row", "2");
-        requestParameter.put("sheet-name", "'Sheet1'");
-        Map<String, String> stepParameter = new HashMap<>();
-        stepParameter.put("templates-root", "workbook-to-curriculum-codes.xsl");
-        StepSimulator simulator = new StepSimulator(modelName, this.XLSX, requestParameter);
-        Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
-        Assert.assertNotNull(result);
-        XMLStringWriter writer = new XMLStringWriter(XML.NamespaceAware.No);
+    @Test
+    public void testInterimSplitWorkbookHeaderTrue(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-workbook-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "workbook");
+      stepParameter.put("headers", "true");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitWorkbookHeaderFalse(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-workbook-header-false";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "workbook");
+      stepParameter.put("headers", "false");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowHeaderTrue(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitWorksheetHeaderFalse(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-false";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "false");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitWorksheetHeaderTrue(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-worksheet-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "worksheet");
+      stepParameter.put("headers", "true");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowFilenameColumnHeaderTrue(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+      stepParameter.put("file-name-column", "3");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowFilenameColumnRichtextTrueHeaderTrue(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("richtext","true");
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+      stepParameter.put("file-name-column", "3");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowFilenameColumnRichtextTrueHeaderTrueWorkingdir(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true";
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("richtext","true");
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+      stepParameter.put("file-name-column", "3");
+      stepParameter.put("working-dir", "working_dir_example");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowFilenameColumnRichtextTrueHeaderTrueWorkingdirTransformXSLTDocument(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true";
+      String XSLT_FILE =  "copy.xsl";
+
+      String modelName = "default";
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("richtext","true");
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+      stepParameter.put("file-name-column", "3");
+      stepParameter.put("working-dir", "working_dir_example");
+      /* Use xslt to transformation using a personalised template */
+      /* Example copy content and ignore the default parameters. */
+      stepParameter.put("transform", XLSX_PATH_FILE);
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    @Test
+    public void testInterimSplitRowFilenameColumnRichtextTrueHeaderTrueWorkingXSLTParam(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true-filename-column-richtext-true-working-dir-xsl-param";
+      String XSLT_FILE =  "copy.xsl";
+
+      String modelName = "default";
+
+      Map<String,String> requestParameters = new HashMap<>();
+      requestParameters.put("xslt","copy.xsl");
+
+      /* Add front parameters */
+      Map<String, String> stepParameter = new HashMap<>();
+      stepParameter.put("richtext","true");
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers", "true");
+      stepParameter.put("file-name-column", "3");
+      stepParameter.put("working-dir", "working_dir_example");
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, requestParameters);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+    }
+
+    /* Limite testing - Top tests it is tested. */
+    /*
+    *
+    *
+    *
+    * */
+
+
+/*
+
+builder.working(new File(output, "working"));
+    @Test
+    public void testInterim_SplitRow_01(){
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row";
+      String modelName = "default";
+      Map<String, String> requestParameter = new HashMap<>();
+ */
+/*     requestParameter.put("header-row", "1");
+      requestParameter.put("values-row", "2");
+      requestParameter.put("sheet-name", "'Sheet2'");*//*
+
+      Map<String, String> stepParameter = new HashMap<>();
+*/
+/*      stepParameter.put("templates-root", "copy.xsl");
+      stepParameter.put("richtext", "false");
+      stepParameter.put("split-level", "row");
+      stepParameter.put("headers","true");
+      stepParameter.put("file-name-column","1");*//*
+
+*/
+/*        stepParameter.put("working-dir","");
+        stepParameter.put("transform","");*//*
+
+
+      StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, requestParameter);
+      Result result = simulator.process(new Import(), null, output, "import-XLSX", stepParameter);
+     // System.out.println("Content: " + result);
+
+      */
+/*  Assert.assertNotNull(result);*//*
+
+*/
+/*        XMLStringWriter writer = new XMLStringWriter(XML.NamespaceAware.No);
         result.toXML(writer);
         System.out.println(writer.toString());
-        Assert.assertEquals("OK", result.status().name());
-      } catch (IOException e) {
-        Assert.fail(e.getMessage());
-      }
-
+        Assert.assertEquals("OK", result.status().name());*//*
 
     }
 
-  private void validateResult(File targetExpected, File resultExpected, File targetCreated, String resultXML, List<String> attributesToIgnore) throws IOException {
-    String resultXMLExpected = FileUtils.read(resultExpected);
-    System.out.println(resultXML);
-
-    final boolean isOutputZip = FileUtils.isZip(targetCreated);
-    //Validate Output
-    if (!isOutputZip) {
-      XMLComparator.compareXMLFile(targetCreated, targetExpected);
-    } else {
-      File outputFolder = new File(targetCreated.getParentFile(), "test");
-      outputFolder.mkdir();
-      ZipUtils.unzip(targetCreated, outputFolder);
-      for (File created:outputFolder.listFiles()) {
-        File expected = new File(targetExpected, created.getName());
-        Assert.assertNotNull("Target expected is null for " + (targetExpected.getAbsolutePath() + "/" + created.getName()), expected);
-        System.out.println(created.getAbsolutePath());
-        System.out.println(expected.getAbsolutePath());
-        XMLComparator.compareXMLFile(created, expected);
-      }
-    }
-
-    //Validate Result
-    XMLComparator.isSimilar(resultXMLExpected, resultXML, attributesToIgnore);
-  }
+*/
 }
