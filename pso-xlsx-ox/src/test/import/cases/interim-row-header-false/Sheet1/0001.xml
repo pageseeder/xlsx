@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?stylesheet format="standard" config="" title="0001"?>
+<root>
+   <properties>
+      <property name="document-type"/>
+   </properties>
+   <section id="title">
+      <body>
+         <heading1>0001</heading1>
+      </body>
+   </section>
+   <section id="content" format="pslabelvalues">
+      <body>
+         <para>Column 0: <inlineLabel name="column_0">Heade 1</inlineLabel>
+         </para>
+         <para>Column 1: <inlineLabel name="column_1">Header 2</inlineLabel>
+         </para>
+         <para>Column 2: <inlineLabel name="column_2">FileName</inlineLabel>
+         </para>
+      </body>
+   </section>
+</root>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?stylesheet format="standard" config="" title="0002"?>
+<root>
+   <properties>
+      <property name="document-type"/>
+   </properties>
+   <section id="title">
+      <body>
+         <heading1>0002</heading1>
+      </body>
+   </section>
+   <section id="content" format="pslabelvalues">
+      <body>
+         <para>Heade 1: <inlineLabel name="heade_1">Value 1a</inlineLabel>
+         </para>
+         <para>Header 2: <inlineLabel name="header_2">Value 1b</inlineLabel>
+         </para>
+         <para>FileName: <inlineLabel name="filename">file-1.psml</inlineLabel>
+         </para>
+      </body>
+   </section>
+</root>

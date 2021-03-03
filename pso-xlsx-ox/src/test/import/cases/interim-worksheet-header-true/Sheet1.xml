@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?stylesheet format="standard" config="" title="Sheet1"?>
+<root>
+   <properties>
+      <property name="document-type"/>
+   </properties>
+   <section id="title">
+      <body>
+         <heading1>Sheet1</heading1>
+      </body>
+   </section>
+   <section id="sheet">
+      <body>
+         <table>
+            <row>
+               <hcell>Heade 1</hcell>
+               <hcell>Header 2</hcell>
+               <hcell>FileName</hcell>
+            </row>
+            <row>
+               <cell>Value 1a</cell>
+               <cell>Value 1b</cell>
+               <cell>file-1.psml</cell>
+            </row>
+            <row>
+               <cell>Value 2a</cell>
+               <cell>Value 2b</cell>
+               <cell>file-2.psml</cell>
+            </row>
+         </table>
+      </body>
+   </section>
+</root>

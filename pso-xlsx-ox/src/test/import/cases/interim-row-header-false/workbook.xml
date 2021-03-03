@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?stylesheet format="standard" config="" title="sample"?>
+<root>
+   <properties>
+      <property name="document-type"/>
+   </properties>
+   <section id="title">
+      <body>
+         <heading1>sample</heading1>
+      </body>
+   </section>
+   <section id="links" format="psxreflist">
+      <body>
+         <para>
+            <xref frag="default"
+                  display="document"
+                  type="None"
+                  reverselink="true"
+                  reversetitle="sample"
+                  reversetype="None"
+                  href="Sheet1.xml">Sheet1</xref>
+         </para>
+      </body>
+   </section>
+</root>
