@@ -19,7 +19,7 @@ public class TransformProcessorTest {
     TransformConfigBuilder builder = new TransformConfigBuilder();
     builder.input(input);
     builder.headers(true);
-    builder.transform(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
+    builder.xslt(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
     builder.destination(output);
     builder.filenameColumn(3);
     builder.level(SplitLevel.row);
@@ -43,7 +43,7 @@ public class TransformProcessorTest {
     TransformConfigBuilder builder = new TransformConfigBuilder();
     builder.input(input);
     builder.headers(true);
-    builder.transform(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
+    builder.xslt(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
     builder.destination(output);
     builder.filenameColumn(3);
     builder.level(SplitLevel.worksheet);
@@ -67,7 +67,7 @@ public class TransformProcessorTest {
     TransformConfigBuilder builder = new TransformConfigBuilder();
     builder.input(input);
     builder.headers(true);
-    builder.transform(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
+    builder.xslt(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
     builder.destination(output);
     builder.filenameColumn(3);
     builder.level(SplitLevel.workbook);
