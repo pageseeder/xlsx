@@ -6,7 +6,6 @@ import org.pageseeder.ox.api.StepInfo;
 import org.pageseeder.ox.core.Model;
 import org.pageseeder.ox.core.PackageData;
 import org.pageseeder.ox.tool.DefaultResult;
-import org.pageseeder.ox.util.FileUtils;
 import org.pageseeder.ox.util.StepUtils;
 import org.pageseeder.ox.util.StringUtils;
 import org.pageseeder.xlsx.TransformProcessor;
@@ -17,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  *
