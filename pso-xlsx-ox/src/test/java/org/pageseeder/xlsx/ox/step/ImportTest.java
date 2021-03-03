@@ -1,19 +1,25 @@
 package org.pageseeder.xlsx.ox.step;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.pageseeder.ox.OXConfig;
 import org.pageseeder.ox.api.Result;
 import org.pageseeder.ox.step.StepSimulator;
+import org.xml.sax.SAXException;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
   public class ImportTest {
-    private static final String DEFAULT_OUTPUT_ROOT_FOLDER = "output";
+    private static final String DEFAULT_OUTPUT_ROOT_FOLDER = "results";
     private static final File XLSX_UPLOAD_FILE = new File("src/test/resources/org/pageseeder/xlsx/ox/step/import/sample.xlsx");
     private static final String XLSX_PATH_FILE = "src/test/resources/org/pageseeder/xlsx/ox/step/import/models/default/copy.xsl";
+
+    private static final File CASES = new File("src/test/import/cases");
 
     @Before
     public void init() {
@@ -22,12 +28,55 @@ import java.util.Map;
     }
 
     @Test
-    public void testDefaultConfiguration(){
-      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/default";
+    public void testDefaultConfiguration() throws IOException, SAXException {
+      testIndividual("default");
+      /*
+         File contentResult = new File(RESULTS,folderName);
+         contentResult.mkdirs();
+      */
+    }
+
+    public void testIndividual(String folderName) throws IOException, SAXException {
+      testIndividual(new File(CASES, folderName), folderName);
+    }
+
+    public void testIndividual(File dir, String folderName) throws IOException, SAXException {
+      if (dir.isDirectory()) {
+
+        File actual = process(dir, folderName);
+/*        if (new File(dir, dir.getName() + ".docx").exists()) {
+          System.out.println(dir.getName());
+          File result = new File(RESULTS, dir.getName());
+          result.mkdirs();
+          File actual = process(dir, result);
+          File expected = new File(dir, "expected.psml");
+
+          // Check that the files exist
+          Assert.assertTrue(actual.exists());
+          Assert.assertTrue(expected.exists());
+
+          Assert.assertTrue(actual.length() > 0);
+          Assert.assertTrue(expected.length() > 0);
+          assertXMLEqual(expected, actual, result);*/
+        System.out.println("Stop the results...");
+      } else {
+        System.out.println("Unable to find files for test:" + dir.getName());
+      }
+    }
+
+    private File process(File test, String folderName) {
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/" + folderName;
+
       String modelName = "default";
 
       StepSimulator simulator = new StepSimulator(modelName, this.XLSX_UPLOAD_FILE, null);
+
+      String pathFolder = simulator.getData().directory().getAbsolutePath() + "/" + output;
+      File resultFolder = new File(pathFolder);
+
       Result result = simulator.process(new Import(), null, output, "import-XLSX", null);
+
+      return resultFolder;
     }
 
     @Test
@@ -172,7 +221,7 @@ import java.util.Map;
 
     @Test
     public void testInterimSplitRowFilenameColumnRichtextTrueHeaderTrueWorkingXSLTParam(){
-      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-header-true-filename-column-richtext-true-working-dir-xsl-param";
+      String output = DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-row-filename-column-richtext-true-header-true-working-dir-xsl-param";
       String XSLT_FILE =  "copy.xsl";
 
       String modelName = "default";
@@ -198,6 +247,35 @@ import java.util.Map;
     *
     *
     * */
+
+/*
+    public void testIndividual(String folderName) throws IOException, SAXException {
+      testIndividual(new File(CASES, folderName));
+    }
+
+    public void testIndividual(File dir) throws IOException, SAXException {
+      if (dir.isDirectory()) {
+
+        if (new File(dir, dir.getName() + ".docx").exists()) {
+          System.out.println(dir.getName());
+          File result = new File(RESULTS, dir.getName());
+          result.mkdirs();
+          File actual = process(dir, result);
+          File expected = new File(dir, "expected.psml");
+
+          // Check that the files exist
+          Assert.assertTrue(actual.exists());
+          Assert.assertTrue(expected.exists());
+
+          Assert.assertTrue(actual.length() > 0);
+          Assert.assertTrue(expected.length() > 0);
+          assertXMLEqual(expected, actual, result);
+        } else {
+          System.out.println("Unable to find DOCX file for test:" + dir.getName());
+        }
+      }
+    }
+*/
 
 
 /*
