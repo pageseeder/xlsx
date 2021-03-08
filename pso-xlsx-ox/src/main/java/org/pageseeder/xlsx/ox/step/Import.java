@@ -43,6 +43,9 @@ public class Import implements Step {
     File input = StepUtils.getInput(data, info);
     File output = StepUtils.getOutput(data, info, input);
 
+    /* Result content - for step */
+    result = new DefaultResult(model, data, info, output);
+
     try {
       TransformConfig config = getConfig(model,data,info,input,output);
       StringWriter writer = new StringWriter();
