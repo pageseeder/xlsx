@@ -31,13 +31,18 @@ public class Param {
     // do nothing
   }
 
+  public Param(String name, String expression){
+    this.name = name;
+    this.expression = expression;
+  }
+
   /**
    * Sets the name of the parameter.
    *
    * @param name The name of the parameter
    */
-  public void setName(String n) {
-    this.name = n;
+  public void setName(String name) {
+    this.name = name;
   }
 
   /**
