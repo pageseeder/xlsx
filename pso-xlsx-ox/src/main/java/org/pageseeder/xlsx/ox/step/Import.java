@@ -9,6 +9,7 @@ import org.pageseeder.ox.tool.DefaultResult;
 import org.pageseeder.ox.util.StepUtils;
 import org.pageseeder.ox.util.StringUtils;
 import org.pageseeder.xlsx.TransformProcessor;
+import org.pageseeder.xlsx.config.Param;
 import org.pageseeder.xlsx.config.SplitLevel;
 import org.pageseeder.xlsx.config.TransformConfig;
 import org.pageseeder.xlsx.config.TransformConfigBuilder;
@@ -16,6 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -77,6 +81,27 @@ public class Import implements Step {
     //## Handle the transformation file
     File xslt = getXSLFile(input.getParentFile(), model, data, info);
     builder.xslt(xslt);
+
+    // Add the parameters from step definition in model.xml
+    // these parameters should use the prefix _xslt-
+    Param param = null;
+    for (Map.Entry<String, String> p :info.parameters().entrySet()) {
+      if (p.getKey().startsWith("_xslt-")) {
+        String name = p.getKey().replaceAll("_xslt-", "");
+        String value = StepUtils.applyDynamicParameterLogic(data, info, p.getValue());
+        builder.parameter(new Param(name, value));
+      }
+    }
+
+    // Add the parameters from from fields in model.xml
+    // these parameters should use the prefix _xslt-
+    for (Map.Entry<String, String> p :data.getParameters().entrySet()) {
+      if (p.getKey().startsWith("_xslt-")) {
+        String name = p.getKey().replaceAll("_xslt-", "");
+        String value = StepUtils.applyDynamicParameterLogic(data, info, p.getValue());
+        builder.parameter(new Param(name, value));
+      }
+    }
 
     return builder.build();
   }
