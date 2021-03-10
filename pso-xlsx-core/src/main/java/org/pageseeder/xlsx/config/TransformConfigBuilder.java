@@ -6,6 +6,7 @@ package org.pageseeder.xlsx.config;
 import org.pageseeder.xlsx.util.ToolUtils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -136,6 +137,14 @@ public class TransformConfigBuilder {
     return this;
   }
 
+  public TransformConfigBuilder parameter (Param parameter) {
+    if (this.parameters == null) {
+      this.parameters = new ArrayList<>();
+    }
+    this.parameters.add(parameter);
+    return this;
+  }
+
   public TransformConfig build(){
     this.setupMissingValuesToDefault();
 
@@ -158,4 +167,5 @@ public class TransformConfigBuilder {
     if (this.parameters == null) this.parameters = Collections.emptyList();
 
   }
+
 }
