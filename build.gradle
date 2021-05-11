@@ -10,6 +10,9 @@ ext {
   globalVersion = file('version.txt').text
   oxVersion = '2.2.62'
   psoXMLWriterVersion = '1.0.3'
+
+  //Third party
+  slf4jAPIVersion = '1.7.30'
 }
 
 subprojects {
@@ -18,7 +21,7 @@ subprojects {
 
   apply plugin: 'java'
   apply from: "$rootDir/gradle/publish-mavencentral.gradle"
-  
+
   sourceCompatibility = JavaVersion.VERSION_1_8
   targetCompatibility = JavaVersion.VERSION_1_8
 
