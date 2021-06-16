@@ -48,7 +48,6 @@ public final class TransformConfig {
 
   /**
    * The column to use as the filename for each row (split by row only).
-   * The column to use to generate the filenames.
    */
   private final int _filenameColumn;
 
@@ -73,12 +72,12 @@ public final class TransformConfig {
   private final String _workbookDoctype;
 
   /**
-   * The path to the file to use to xslt into PSXML.
+   * The path to the file to use to xslt into PSML.
    */
   private final File _xslt;
 
   /**
-   * List of parameters specified for the transformation into PSXML
+   * List of parameters specified for the transformation into PSML
    */
    private final List<Param> _parameters;
 
