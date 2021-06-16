@@ -17,6 +17,7 @@ import org.pageseeder.xlsx.util.XSLT;
  *
  * @author Christophe Lauret
  * @version 16 April 2012
+ * @deprecated @see {@link org.pageseeder.xlsx.config.TransformConfig}
  */
 public final class Config {
 
