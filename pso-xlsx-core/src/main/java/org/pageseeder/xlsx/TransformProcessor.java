@@ -97,7 +97,7 @@ public class TransformProcessor {
 
     // 4. Convert rows to PSXML
     log("Converting interim data to PSXML");
-    interimToFinalXML(interim, folder, this._config, this.getConfig().get_parameters() );
+    interimToFinalXML(interim, folder, this._config, this.getConfig().getParameters() );
   }
 
   private void validateConfig() {

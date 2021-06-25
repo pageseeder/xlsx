@@ -170,7 +170,7 @@ public final class TransformConfig {
   /**
    * @return List of parameters specified for the transformation into PSXML
    */
-  public List<Param> get_parameters() {
+  public List<Param> getParameters() {
     return _parameters;
   }
 
