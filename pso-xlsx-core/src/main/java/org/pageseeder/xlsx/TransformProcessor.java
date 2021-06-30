@@ -170,6 +170,10 @@ public class TransformProcessor {
     // Parse relationships
     Relationships relationships = Relationships.parse(new File(xlWorkbookFolder, "_rels/workbook.xml.rels"));
 
+    // TODO Parse Style
+    File xlStyle = new File(xlWorkbookFolder, "workbook.xml");
+
+
     try {
       // Parse shared strings
       SharedStrings shared = null;
@@ -206,20 +210,22 @@ public class TransformProcessor {
   private static void generateInterimByXSLT(File unpacked, File interim, TransformConfig config, String title) throws XLSXException {
 
     // Creates files and folders
-    File xlWorkbookFolder = new File(unpacked, "/xl");
-    File xlWorkbook = new File(xlWorkbookFolder, "workbook.xml");
+    File xlFolder = new File(unpacked, "/xl");
+    File xlWorkbook = new File(xlFolder, "workbook.xml");
     File itWorkbook = new File(interim, "workbook.xml");
     if (!interim.exists() && !interim.mkdirs())
       throw new XLSXException("Unable to create interim directory structure.");
 
     // Parse templates
     Templates templates = XSLT.getTemplatesFromResource("org/pageseeder/xlsx/xslt/split-workbook.xsl");
-    String relationships = xlWorkbookFolder.toURI().toString()+"_rels/workbook.xml.rels";
+    String relationships = xlFolder.toURI().toString() + "_rels/workbook.xml.rels";
+    String styles = xlFolder.toURI().toString() + "styles.xml";
     String outuri = interim.toURI().toString();
 
     // Initiate parameters
-    Map<String, String> parameters = new HashMap<String, String>();
+    Map<String, String> parameters = new HashMap<>();
     parameters.put("_relationships", relationships);
+    parameters.put("_styles", styles);
     parameters.put("_outputfolder", outuri);
     parameters.put("_booktitle", title);
     parameters.put("_splitlevel", config.getSplitLevel().toString());

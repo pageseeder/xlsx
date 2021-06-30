@@ -1,6 +1,6 @@
-<!-- 
+<!--
   This template splits an Excel spreadsheet into a document per row so that it can be fed into a template.
-  
+
   @author Christophe Lauret
   @version 16 April 2012
 -->
@@ -16,6 +16,9 @@
 
 <!-- URI Relationships (.rels) document -->
 <xsl:param name="_relationships" />
+
+<!-- Styles -->
+<xsl:param name="_styles" />
 
 <!-- Output folder -->
 <xsl:param name="_outputfolder" />
@@ -44,6 +47,9 @@
 
 <!-- Relationships document -->
 <xsl:variable name="relationships" select="document($_relationships)"/>
+
+  <!-- Styles document -->
+<xsl:variable name="styles" select="document($_styles)"/>
 
 
 <!-- Process the workbook depending on the split level -->
@@ -85,7 +91,7 @@
 </xsl:template>
 
 <!--
-  Process the worksheet splitting at the 'row' level.  
+  Process the worksheet splitting at the 'row' level.
 
   @param title  the title of the worksheet
 -->
@@ -118,7 +124,7 @@
 <!-- ========================================================================================== -->
 
 <!--
-  Process the workbook splitting at the 'row' level.  
+  Process the workbook splitting at the 'row' level.
 -->
 <xsl:template match="ss:workbook" mode="worksheet">
 <xsl:call-template name="header-comment" />
@@ -146,7 +152,7 @@
 </xsl:template>
 
 <!--
-  Process the worksheet splitting at the 'row' level.  
+  Process the worksheet splitting at the 'row' level.
 
   @param title  the title of the worksheet
 -->
@@ -175,7 +181,7 @@
 <!-- ========================================================================================== -->
 
 <!--
-  Process the workbook splitting at the 'row' level.  
+  Process the workbook splitting at the 'row' level.
 -->
 <xsl:template match="ss:workbook" mode="row">
 <xsl:call-template name="header-comment" />
@@ -203,7 +209,7 @@
 </xsl:template>
 
 <!--
-  Process the worksheet splitting at the 'row' level.  
+  Process the worksheet splitting at the 'row' level.
 -->
 <xsl:template match="ss:worksheet" mode="row">
 <xsl:param name="title"/>
@@ -246,7 +252,7 @@
 </xsl:template>
 
 <!--
-  Display a header comment. 
+  Display a header comment.
 -->
 <xsl:template name="header-comment">
 <xsl:comment>
@@ -262,29 +268,39 @@
 
 <!--
   Retrieve the value from the shared strings
-  
+
   @param c The Excel column data.
 -->
 <xsl:function name="ss:get-value">
   <xsl:param name="c"/>
-  <xsl:value-of select="if ($c/@t = 's') then ss:get-share-string($c/ss:v) else $c/ss:v"/>
+  <xsl:variable name="cell-value" select="if ($c/@t = 's') then ss:get-share-string($c/ss:v) else $c/ss:v"/>
+  <!-- @s has the style index in the cell-format(ss:cellXfs) element in styles.xml-->
+  <xsl:value-of select="if ($c/@s) then ss:apply-cell-format($c/@s, $cell-value) else $cell-value"/>
 </xsl:function>
+
+
+
+
 
 <!--
   Retrieve the value from the shared strings
-  
+
   @param c The Excel column data.
 -->
 <xsl:function name="ss:get-value-sharedstring">
   <xsl:param name="c"/>
-  <xsl:sequence select="if ($c/@t = 's') then ss:get-share-string-richtext($c/ss:v) else $c/ss:v/text()"/>
+  <xsl:variable name="cell-value" select="if ($c/@t = 's') then ss:get-share-string-richtext($c/ss:v) else $c/ss:v/text()"/>
+  <!--
+    @s has the style index in the cell-format(ss:cellXfs) element in styles.xml and it is not a shared string
+  -->
+  <xsl:value-of select="if ($c/@s and not ($c/@t = 's')) then ss:apply-cell-format($c/@s, $cell-value) else $cell-value"/>
 </xsl:function>
 
 
 
 <!--
   Retrieve the value from the shared strings
-  
+
   @param i The shared string reference
 -->
 <xsl:function name="ss:get-share-string">
@@ -294,7 +310,7 @@
 
 <!--
   Retrieve the richtext from the shared strings
-  
+
   @param i The shared string reference
 -->
 <xsl:function name="ss:get-share-string-richtext">
@@ -429,6 +445,79 @@
 <xsl:function name="ss:filename">
 <xsl:param name="path"/>
 <xsl:value-of select="tokenize($path, '/')[last()]"/>
+</xsl:function>
+
+<!--
+  Applied cell format according to the attribute ss:c/@s
+  - Number Formatting
+-->
+<xsl:function name="ss:apply-cell-format">
+  <xsl:param name="style-index" as="xs:integer"/>
+  <xsl:param name="value" as="xs:string?"/>
+  <!--
+    The style index is zero-based however the xslt index is one-based. As result it is necessary to add one to the style-index.
+  -->
+  <xsl:variable name="cell-format" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[($style-index + 1)]"/>
+
+  <xsl:choose>
+    <!-- empty value/content -->
+    <xsl:when test="not($value)"><xsl:value-of select="$value"/></xsl:when>
+    <!-- the number format should be applied -->
+    <xsl:when test="$cell-format/@applyNumberFormat"><xsl:value-of select="ss:apply-cell-number-format($cell-format/@numFmtId, $value)"/></xsl:when>
+    <!-- any other case -->
+    <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+  </xsl:choose>
+
+</xsl:function>
+
+<xsl:function name="ss:apply-cell-number-format">
+  <xsl:param name="number-format-id" as="xs:string"/>
+  <xsl:param name="value" as="xs:string"/>
+
+  <!--
+  There are defaults format that goes from 1 to 163.
+  After this it will be custom format and is stored ss:styleSheet/ss:numFmts/ss:numFmt
+  -->
+  <xsl:variable name="custom-format" select="$styles/ss:styleSheet/ss:numFmts/ss:numFmt[@numFmtId = $number-format-id]/@formatCode"/>
+
+  <xsl:choose>
+    <xsl:when test="$number-format-id = ('', '0')"><xsl:value-of select="$value"/></xsl:when>
+    <xsl:when test="$number-format-id= '14' or $custom-format = ('dd/mm/yyyy;@')">
+      <!-- The default value is mm-dd-yy however as it is Australia then it will be changed to dd-mm-yy -->
+      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
+<!--      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]')"/>-->
+      <xsl:value-of select="format-dateTime($value-as-date, '[D01]/[M01]/[Y0001]')"/>
+    </xsl:when>
+    <xsl:when test="$custom-format = ('m/d/yyyy;@')">
+      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
+      <xsl:value-of select="format-dateTime($value-as-date, '[M1]/[D1]/[Y0001]')"/>
+    </xsl:when>
+    <xsl:when test=" $custom-format = ('yyyy/mm/dd;@')">
+      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
+      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01]')"/>
+    </xsl:when>
+    <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+  </xsl:choose>
+
+</xsl:function>
+
+<xsl:variable name="base-datetime" select="xs:dateTime('1899-12-31T00:00:00.000')"/>
+<!--<xsl:variable name="base-date" select="xs:date('1899-12-31')"/>-->
+<!--
+  Calcu
+-->
+<xsl:function name="ss:calculate-datetime" as="xs:dateTime">
+  <xsl:param name="value" as="xs:integer"/>
+  <!--
+  Please note that in order to calculate dates correctly, the year 1900 must be considered a leap-year hence
+  February 29th is considered a valid date – even though the year 1900 is not a leap year.  This bug originated from
+  Lotus 123, and was purposely implemented in Excel for backward compatibility.)
+
+  $value equal to 59 is 28th February 1900. And 60 due to the bug is supposed to be 29th February 1900 then it will
+  shown as 28th February 1900 and 61 will be 1st March 1900.
+  -->
+  <xsl:variable name="adjusted-value" select="if ($value > 59) then ($value -1) else $value"/>
+  <xsl:sequence select="$base-datetime + xs:dayTimeDuration(concat('P', $adjusted-value, 'D'))"/>
 </xsl:function>
 </xsl:stylesheet>
 

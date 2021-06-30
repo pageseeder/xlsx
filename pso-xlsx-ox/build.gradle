@@ -19,9 +19,13 @@ dependencies {
         'junit:junit:4+',
         'org.hamcrest:java-hamcrest:2.0.0.0',
         'org.hamcrest:hamcrest-junit:2.0.0.0',
-        'org.xmlunit:xmlunit-core:2.3.0',
-        'org.xmlunit:xmlunit-matchers:2.3.0',
-        'org.xmlunit:xmlunit-legacy:2.3.0',
+//        'org.xmlunit:xmlunit-core:2.3.0',
+//        'org.xmlunit:xmlunit-matchers:2.3.0',
+//        'org.xmlunit:xmlunit-legacy:2.3.0',
+
+        'org.xmlunit:xmlunit-core:2.8.2',
+        'org.xmlunit:xmlunit-matchers:2.8.2',
+        'org.xmlunit:xmlunit-legacy:2.8.2',
         "org.pageseeder.ox:pso-ox-test:${oxVersion}",
     )
 }

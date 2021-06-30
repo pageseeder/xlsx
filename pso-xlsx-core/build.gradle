@@ -6,8 +6,23 @@ dependencies {
     'org.slf4j:slf4j-api:1.7.21',
   )
 
+  runtimeOnly (
+    'net.sf.saxon:Saxon-HE:9.8.0-12',
+  )
+
   testImplementation (
     'junit:junit:4+'
   )
 
+  testRuntimeOnly(
+    'net.sf.saxon:Saxon-HE:9.8.0-12',
+  )
+
+  testImplementation(
+    'org.hamcrest:java-hamcrest:2.0.0.0',
+    'org.hamcrest:hamcrest-junit:2.0.0.0',
+    'org.xmlunit:xmlunit-core:2.8.2',
+    'org.xmlunit:xmlunit-matchers:2.8.2',
+    'org.xmlunit:xmlunit-assertj3:2.8.2'
+  )
 }
