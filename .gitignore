@@ -18,3 +18,4 @@ hs_err_pid*
 /pso-xlsx-ant/build/
 /pso-xlsx-core/build/
 /pso-xlsx-ox/build/
+/pso-xlsx-core/out/
