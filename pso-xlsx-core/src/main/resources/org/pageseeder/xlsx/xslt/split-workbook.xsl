@@ -482,7 +482,9 @@
 
   <xsl:choose>
     <xsl:when test="$number-format-id = ('', '0')"><xsl:value-of select="$value"/></xsl:when>
-    <xsl:when test="$number-format-id= '14' or $custom-format = ('dd/mm/yyyy;@')">
+    <xsl:when test="$number-format-id= '14'
+                  or $custom-format = ('dd/mm/yyyy;@', 'd/m/yyyy;@', 'd/mm/yy;@', 'd/m/yy;@', 'dd/mm/yy;@',
+                   '[$-C09]dd\-mmm\-yy;@', '[$-C09]dd\-mmmm\-yyyy;@', '[$-C09]d\ mmmm\ yyyy;@')">
       <!-- The default value is mm-dd-yy however as it is Australia then it will be changed to dd-mm-yy -->
       <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
 <!--      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]')"/>-->
