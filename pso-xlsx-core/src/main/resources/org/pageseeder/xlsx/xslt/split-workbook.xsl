@@ -490,11 +490,11 @@
 <!--      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]')"/>-->
       <xsl:value-of select="format-dateTime($value-as-date, '[D01]/[M01]/[Y0001]')"/>
     </xsl:when>
-    <xsl:when test="$custom-format = ('m/d/yyyy;@')">
+    <xsl:when test="$custom-format = ('m/d/yyyy;@', 'mm/dd/yy;@')">
       <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
       <xsl:value-of select="format-dateTime($value-as-date, '[M1]/[D1]/[Y0001]')"/>
     </xsl:when>
-    <xsl:when test=" $custom-format = ('yyyy/mm/dd;@')">
+    <xsl:when test=" $custom-format = ('yyyy/mm/dd;@', 'yyyy\-mm\-dd;@', 'yy/mm/dd;@')">
       <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
       <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01]')"/>
     </xsl:when>
