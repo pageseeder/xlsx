@@ -9,13 +9,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 
 import org.pageseeder.xlsx.config.TransformConfig;
 import org.pageseeder.xlsx.XLSXException;
 import org.pageseeder.xlsx.config.SplitLevel;
+import org.pageseeder.xlsx.core.CellFormat;
+import org.pageseeder.xlsx.core.Style;
 import org.pageseeder.xlsx.core.WorkBook;
 import org.pageseeder.xlsx.core.WorkSheet;
 import org.pageseeder.xlsx.util.Namespaces;
@@ -59,7 +66,7 @@ public final class Interim {
    * @param book   The workbook to process.
    * @param shared The shared strings to resolve cell values.
    */
-  public void process(WorkBook book, SharedStrings shared) {
+  public void process(WorkBook book, SharedStrings shared, Style style) {
     try (Writer xml = getWriterForXML("workbook.xml")) {
       // Generate the XML for the workbook
       ;
@@ -69,7 +76,7 @@ public final class Interim {
       // Process worksheets
       for (WorkSheet sheet : book.sheets()) {
         if (sheet.size() > 0) {
-          process(book, sheet, shared, xml);
+          process(book, sheet, shared, xml, style);
         }
       }
 
@@ -86,7 +93,7 @@ public final class Interim {
    * @param sheet  The worksheet being processed.
    * @param shared The shared strings to resolve cell values.
    */
-  private void process(WorkBook book, WorkSheet sheet, SharedStrings shared, Appendable xmlbook) {
+  private void process(WorkBook book, WorkSheet sheet, SharedStrings shared, Appendable xmlbook, Style style) {
     Writer writer = null;
     String path = sheet.name().trim()+".xml";
     try {
