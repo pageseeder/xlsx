@@ -171,7 +171,7 @@ public class TransformProcessor {
     Relationships relationships = Relationships.parse(new File(xlWorkbookFolder, "_rels/workbook.xml.rels"));
 
     // TODO Parse Style
-    File xlStyle = new File(xlWorkbookFolder, "workbook.xml");
+    File xlStyle = new File(xlWorkbookFolder, "styles.xml");
 
 
     try {
@@ -192,7 +192,7 @@ public class TransformProcessor {
 
       // Generate the interim data
       Interim processor = new Interim(interim, config);
-      processor.process(workbook, shared);
+      processor.process(workbook, shared, style);
 
     } catch (Exception ex) {
       ex.printStackTrace();
