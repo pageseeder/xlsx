@@ -281,13 +281,15 @@ public final class Interim {
           if (this.cellFormatID >= 0) {
             CellFormat cellFormat = this._style.getCellFormat(this.cellFormatID);
             boolean applyNumberFormat = cellFormat.isApplyNumberFormat();
-            if(applyNumberFormat) {
+            //Validate if value it has only numbers and or one dot.
+            final boolean isValidNumber = value.matches("^[0-9]*[0-9]+[.]?[0-9]+[^\\W+\\w+]*");
+            if(applyNumberFormat && isValidNumber) {
               int numFormatId = cellFormat.getNumberFormatId();
               String numberFormatCode  = this._style.getNumberFormatCode(numFormatId);
               final boolean isDate = Style.isDateFormat(numberFormatCode);
               final boolean isTime = Style.isTimeFormat(numberFormatCode);
 
-              if((isDate || isTime) && (value.matches("^[0-9]*[0-9]+[.]?[0-9]+[^\\W+\\w+]*"))) { //Validate if value it has only numbers and or one dot.
+              if(isDate || isTime) {
                 LocalDateTime localDateTime = calculateDateTime(value);
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 if (isDate && !isTime) {
