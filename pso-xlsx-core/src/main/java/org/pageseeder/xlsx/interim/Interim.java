@@ -116,7 +116,7 @@ public final class Interim {
         xml.append(" book-title=\"").append(XML.attribute(book.getTitle())).append('"');
         xml.append(">\n");
       }
-      Processor handler = new Processor(book, sheet, shared, this._config, xml);
+      Processor handler = new Processor(book, sheet, shared, style, this._config, xml);
       try {
         XML.parse(sheet.source(), handler, true);
       } catch (XLSXException ex) {
@@ -173,6 +173,9 @@ public final class Interim {
     /** The shared strings. */
     private final SharedStrings _shared;
 
+    /** the style.xml **/
+    private final Style _style;
+
     /** Split level */
     private final SplitLevel level;
 
@@ -190,6 +193,9 @@ public final class Interim {
 
     /** The current column being processed. */
     private String col;
+
+    /** <code>true</code> if reference to cell format in style.xml. */
+    private int cellFormatID = -1;
 
     /** <code>true</code> if reference to shared string. */
     private boolean isShared;
@@ -209,10 +215,11 @@ public final class Interim {
      * @param shared the shared strings to resolve the values.
      * @param config the configuration.
      */
-    public Processor(WorkBook book, WorkSheet sheet, SharedStrings shared, TransformConfig config, Appendable xml) {
+    public Processor(WorkBook book, WorkSheet sheet, SharedStrings shared, Style style, TransformConfig config, Appendable xml) {
       this._book = book;
       this._sheet = sheet;
       this._shared = shared;
+      this._style = style;
       this.level = config.getSplitLevel();
       this.filenameIndex = config.getFilenameColumn() - 1;
       this._xml = xml;
@@ -233,6 +240,10 @@ public final class Interim {
           // <c r="A1" s="1" t="s">
           this.col = Row.toColumn(atts.getValue("r"));
           this.isShared = "s".equals(atts.getValue("t"));
+          final String tempCellFormatID = atts.getValue("s");
+          if (tempCellFormatID != null && !tempCellFormatID.isEmpty()) {
+            this.cellFormatID = Integer.valueOf(tempCellFormatID);
+          }
 
         } else if ("v".equals(name)) {
           this.record = true;
@@ -260,12 +271,37 @@ public final class Interim {
         if ("c".equals(qName)) {
           this.col = null;
           this.isShared = false;
-
+          this.cellFormatID = -1;
         } else if ("v".equals(qName)) {
           String value = this.buffer.toString();
           if (this.isShared) {
             value = this._shared.get(Integer.parseInt(value));
           }
+
+          if (this.cellFormatID >= 0) {
+            CellFormat cellFormat = this._style.getCellFormat(this.cellFormatID);
+            boolean applyNumberFormat = cellFormat.isApplyNumberFormat();
+            if(applyNumberFormat) {
+              int numFormatId = cellFormat.getNumberFormatId();
+              String numberFormatCode  = this._style.getNumberFormatCode(numFormatId);
+              final boolean isDate = Style.isDateFormat(numberFormatCode);
+              final boolean isTime = Style.isTimeFormat(numberFormatCode);
+
+              if((isDate || isTime) && (value.matches("^[0-9]*[0-9]+[.]?[0-9]+[^\\W+\\w+]*"))) { //Validate if value it has only numbers and or one dot.
+                LocalDateTime localDateTime = calculateDateTime(value);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                if (isDate && !isTime) {
+                  formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                } else if (isTime && !isDate) {
+                  formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                }
+                String formatDateTime = localDateTime.format(formatter);
+                //System.out.println(formatDateTime);
+                value = formatDateTime;
+              }
+            }
+          }
+
           if (this.getTitles)
             this.row.title(this.col, value);
           else
@@ -318,6 +354,58 @@ public final class Interim {
         }
       }
     }
+    private final LocalDateTime EXCEL_EPOCH_REFERENCE = LocalDateTime.MAX.of( 1899 , Month.DECEMBER , 31, 0,0,0 );
+    private final BigDecimal EXCEL_SECOND_VALUE = new BigDecimal(1).divide(new BigDecimal(24*60*60),  new MathContext(17));
+
+    /**
+     *
+     * @param value
+     * @return
+     */
+    private LocalDateTime calculateDateTime(String value) {
+      BigDecimal countFromEpoch = new BigDecimal(value);
+      if (countFromEpoch.longValue() > 59) {
+        countFromEpoch = countFromEpoch.subtract(new BigDecimal(1));
+      }
+
+      //Get days
+      long days = countFromEpoch.longValue();  // Extract the number of whole days, dropping the fraction.
+
+      //Get seconds
+      BigDecimal decimal = countFromEpoch.remainder(BigDecimal.ONE);
+      long seconds = decimal.divide(EXCEL_SECOND_VALUE, new MathContext(17)).longValue();
+
+      return EXCEL_EPOCH_REFERENCE.plusDays(days).plusSeconds(seconds);
+    }
 
   }
+/* TODO - Verify if it is used for Tests
+  public static void main (String [] args) {
+    MathContext mc = new MathContext(17);
+    final BigDecimal EXCEL_HOUR_VALUE = new BigDecimal("1").divide(new BigDecimal("24"),  mc);
+    final BigDecimal EXCEL_MINUTE_VALUE = EXCEL_HOUR_VALUE.divide(new BigDecimal("60.0000000000000000"),  mc);
+    final BigDecimal EXCEL_SECOND_VALUE = new BigDecimal(1).divide(new BigDecimal(24*60*60),  mc);
+    BigDecimal value = new BigDecimal("10.041666666666666");
+    BigDecimal value = new BigDecimal("10.042372685188");
+    BigDecimal value = new BigDecimal("10.48541666667");
+
+    BigDecimal value = new BigDecimal("23452.4523434");
+    BigDecimal decimal = value.remainder(BigDecimal.ONE);
+
+    System.out.println("1H: " + EXCEL_HOUR_VALUE.toString());
+    System.out.println("1M: " + EXCEL_MINUTE_VALUE.toString());
+    System.out.println("1S: " + EXCEL_SECOND_VALUE.toString());
+    System.out.println(decimal);
+    System.out.println("Hora: " + decimal.divide(EXCEL_HOUR_VALUE, new MathContext(2)));
+    System.out.println("minutes: " + decimal.remainder(EXCEL_HOUR_VALUE).divide(EXCEL_MINUTE_VALUE, new MathContext(2)));
+    System.out.println("segundos: " + decimal.remainder(EXCEL_MINUTE_VALUE).divide(EXCEL_SECOND_VALUE, new MathContext(2)));
+    LocalDateTime EXCEL_EPOCH_REFERENCE = LocalDateTime.MAX.of( 1899 , Month.DECEMBER , 31, 0,0,0 );
+    BigDecimal seconds = decimal.divide(EXCEL_SECOND_VALUE, mc);
+    System.out.println("Seconds: " + seconds.toString());
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    System.out.println(EXCEL_EPOCH_REFERENCE.plusSeconds(seconds.longValue()).format(formatter));
+    String numberFormatCode = "mm-dd-yy";
+    System.out.println(numberFormatCode.matches(".*[dy]+.*"));
+  }
+ */
 }
