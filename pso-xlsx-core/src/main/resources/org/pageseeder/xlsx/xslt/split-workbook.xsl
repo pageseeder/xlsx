@@ -479,25 +479,24 @@
   After this it will be custom format and is stored ss:styleSheet/ss:numFmts/ss:numFmt
   -->
   <xsl:variable name="custom-format" select="$styles/ss:styleSheet/ss:numFmts/ss:numFmt[@numFmtId = $number-format-id]/@formatCode"/>
+  <xsl:variable name="is-date" select="matches($custom-format, '.*[dy]+.*') or $number-format-id = ('14', '15', '16', '17', '22','30' )"/>
+  <xsl:variable name="is-time" select="matches($custom-format, '.*[hs]+.*') or $number-format-id = ('18', '19', '20', '21', '22' )"/>
+  <xsl:variable name="is-valid-number" select="matches($value, '^[0-9]*[0-9]+[.]?[0-9]+[^\W+\w+]*')"/>
 
   <xsl:choose>
-    <xsl:when test="$number-format-id = ('', '0')"><xsl:value-of select="$value"/></xsl:when>
-    <xsl:when test="$number-format-id= '14'
-                  or $custom-format = ('dd/mm/yyyy;@', 'd/m/yyyy;@', 'd/mm/yy;@', 'd/m/yy;@', 'dd/mm/yy;@',
-                   '[$-C09]dd\-mmm\-yy;@', '[$-C09]dd\-mmmm\-yyyy;@', '[$-C09]d\ mmmm\ yyyy;@')">
-      <!-- The default value is mm-dd-yy however as it is Australia then it will be changed to dd-mm-yy -->
-      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
-<!--      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]')"/>-->
-      <xsl:value-of select="format-dateTime($value-as-date, '[D01]/[M01]/[Y0001]')"/>
+    <xsl:when test="$number-format-id = ('', '0') or not($is-valid-number)"><xsl:value-of select="$value"/></xsl:when>
+    <xsl:when test="$is-date and $is-time">
+      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
+      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01] [H01]:[m01]:[s01]')"/>
     </xsl:when>
-    <xsl:when test="$custom-format = ('m/d/yyyy;@', 'mm/dd/yy;@')">
-      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
-      <xsl:value-of select="format-dateTime($value-as-date, '[M1]/[D1]/[Y0001]')"/>
-    </xsl:when>
-    <xsl:when test=" $custom-format = ('yyyy/mm/dd;@', 'yyyy\-mm\-dd;@', 'yy/mm/dd;@')">
-      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:integer($value))"/>
+    <xsl:when test="$is-date">
+      <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
       <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01]')"/>
     </xsl:when>
+    <xsl:when test="$is-time">
+    <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
+    <xsl:value-of select="format-dateTime($value-as-date, '[H01]:[m01]:[s01]')"/>
+  </xsl:when>
     <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
   </xsl:choose>
 
@@ -509,7 +508,7 @@
   Calcu
 -->
 <xsl:function name="ss:calculate-datetime" as="xs:dateTime">
-  <xsl:param name="value" as="xs:integer"/>
+  <xsl:param name="value" as="xs:decimal"/>
   <!--
   Please note that in order to calculate dates correctly, the year 1900 must be considered a leap-year hence
   February 29th is considered a valid date – even though the year 1900 is not a leap year.  This bug originated from
@@ -518,8 +517,11 @@
   $value equal to 59 is 28th February 1900. And 60 due to the bug is supposed to be 29th February 1900 then it will
   shown as 28th February 1900 and 61 will be 1st March 1900.
   -->
-  <xsl:variable name="adjusted-value" select="if ($value > 59) then ($value -1) else $value"/>
-  <xsl:sequence select="$base-datetime + xs:dayTimeDuration(concat('P', $adjusted-value, 'D'))"/>
+  <xsl:variable name="seconds-value" select="round(($value mod 1) div (1 div (24*60*60)))"/>
+  <xsl:variable name="date-value" select="$value - ($value mod 1)"/>
+  <xsl:variable name="adjusted-date-value" select="if ($date-value > 59) then ($date-value -1) else $date-value"/>
+
+  <xsl:sequence select="$base-datetime + xs:dayTimeDuration(concat('P', $adjusted-date-value, 'DT', $seconds-value, 'S'))"/>
 </xsl:function>
 </xsl:stylesheet>
 
