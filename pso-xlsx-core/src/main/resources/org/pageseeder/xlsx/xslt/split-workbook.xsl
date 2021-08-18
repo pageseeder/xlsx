@@ -487,11 +487,11 @@
     <xsl:when test="$number-format-id = ('', '0') or not($is-valid-number)"><xsl:value-of select="$value"/></xsl:when>
     <xsl:when test="$is-date and $is-time">
       <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
-      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01] [H01]:[m01]:[s01]')"/>
+      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01] [H01]:[m01]:[s01]')"/>
     </xsl:when>
     <xsl:when test="$is-date">
       <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
-      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]/[M01]/[D01]')"/>
+      <xsl:value-of select="format-dateTime($value-as-date, '[Y0001]-[M01]-[D01]')"/>
     </xsl:when>
     <xsl:when test="$is-time">
     <xsl:variable name="value-as-date" select="ss:calculate-datetime(xs:decimal($value))"/>
