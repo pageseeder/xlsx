@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -356,8 +357,12 @@ public final class Interim {
         }
       }
     }
+
+    //To calculate the second the precision is required to be 14. bigger number like 18 ou 20 will result in one second
+    // less
+    private final MathContext SECOND_MATH_CONTEXT = new MathContext(14, RoundingMode.HALF_UP);
     private final LocalDateTime EXCEL_EPOCH_REFERENCE = LocalDateTime.MAX.of( 1899 , Month.DECEMBER , 31, 0,0,0 );
-    private final BigDecimal EXCEL_SECOND_VALUE = new BigDecimal(1).divide(new BigDecimal(24*60*60),  new MathContext(17));
+    private final BigDecimal EXCEL_SECOND_VALUE = new BigDecimal(1).divide(new BigDecimal(24*60*60), SECOND_MATH_CONTEXT);
 
     /**
      *
@@ -375,39 +380,9 @@ public final class Interim {
 
       //Get seconds
       BigDecimal decimal = countFromEpoch.remainder(BigDecimal.ONE);
-      long seconds = decimal.divide(EXCEL_SECOND_VALUE, new MathContext(17)).longValue();
-
+      long seconds = decimal.divide(EXCEL_SECOND_VALUE, SECOND_MATH_CONTEXT).longValue();
       return EXCEL_EPOCH_REFERENCE.plusDays(days).plusSeconds(seconds);
     }
 
   }
-/* TODO - Verify if it is used for Tests
-  public static void main (String [] args) {
-    MathContext mc = new MathContext(17);
-    final BigDecimal EXCEL_HOUR_VALUE = new BigDecimal("1").divide(new BigDecimal("24"),  mc);
-    final BigDecimal EXCEL_MINUTE_VALUE = EXCEL_HOUR_VALUE.divide(new BigDecimal("60.0000000000000000"),  mc);
-    final BigDecimal EXCEL_SECOND_VALUE = new BigDecimal(1).divide(new BigDecimal(24*60*60),  mc);
-    BigDecimal value = new BigDecimal("10.041666666666666");
-    BigDecimal value = new BigDecimal("10.042372685188");
-    BigDecimal value = new BigDecimal("10.48541666667");
-
-    BigDecimal value = new BigDecimal("23452.4523434");
-    BigDecimal decimal = value.remainder(BigDecimal.ONE);
-
-    System.out.println("1H: " + EXCEL_HOUR_VALUE.toString());
-    System.out.println("1M: " + EXCEL_MINUTE_VALUE.toString());
-    System.out.println("1S: " + EXCEL_SECOND_VALUE.toString());
-    System.out.println(decimal);
-    System.out.println("Hora: " + decimal.divide(EXCEL_HOUR_VALUE, new MathContext(2)));
-    System.out.println("minutes: " + decimal.remainder(EXCEL_HOUR_VALUE).divide(EXCEL_MINUTE_VALUE, new MathContext(2)));
-    System.out.println("segundos: " + decimal.remainder(EXCEL_MINUTE_VALUE).divide(EXCEL_SECOND_VALUE, new MathContext(2)));
-    LocalDateTime EXCEL_EPOCH_REFERENCE = LocalDateTime.MAX.of( 1899 , Month.DECEMBER , 31, 0,0,0 );
-    BigDecimal seconds = decimal.divide(EXCEL_SECOND_VALUE, mc);
-    System.out.println("Seconds: " + seconds.toString());
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    System.out.println(EXCEL_EPOCH_REFERENCE.plusSeconds(seconds.longValue()).format(formatter));
-    String numberFormatCode = "mm-dd-yy";
-    System.out.println(numberFormatCode.matches(".*[dy]+.*"));
-  }
- */
 }
