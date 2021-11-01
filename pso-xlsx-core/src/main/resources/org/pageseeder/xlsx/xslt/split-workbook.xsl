@@ -405,8 +405,58 @@
   <xsl:for-each select="$from to $to">
     <xsl:variable name="colname" select="codepoints-to-string(64 + .)" />
     <xsl:variable name="col"     select="$firstrow/ss:c[starts-with(@r, $colname)]"/>
+    <xsl:variable name="style-ref" select="if($col/@s) then $col/@s else ''"/>
+    <xsl:variable name="style-ref-pos" select="if($col/@s) then number($col/@s)+1 else ''"/>
+    <xsl:variable name="font-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fontId else ''"/>
+    <xsl:variable name="font-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fontId)+ 1 else ''"/>
+    <xsl:variable name="border-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@borderId else ''"/>
+    <xsl:variable name="border-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@borderId)+ 1 else ''"/>
+    <xsl:variable name="fill-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId else ''"/>
+    <xsl:variable name="fill-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId)+ 1 else ''"/>
     <col ref="{$colname}">
-		  <xsl:choose>
+        <xsl:if test="$style-ref != ''">
+            <xsl:variable name="align" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@horizontal"/>
+            <xsl:variable name="indent" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@indent"/>
+            <xsl:if test="$align != ''"><xsl:attribute name="align" select="$align"/></xsl:if>
+            <xsl:if test="$indent != ''"><xsl:attribute name="indent" select="$indent"/></xsl:if>
+        </xsl:if>
+        <xsl:if test="$font-id != ''">
+            <xsl:variable name="bold" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:b) then 'true' else 'false'"/>
+            <xsl:variable name="italic" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:i) then 'true' else 'false'"/>
+            <xsl:variable name="underline" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:u) then 'true' else 'false'"/>
+            <xsl:if test="$bold = 'true'"><xsl:attribute name="bold" select="'true'"/></xsl:if>
+            <xsl:if test="$italic = 'true'"><xsl:attribute name="italic" select="'true'"/></xsl:if>
+            <xsl:if test="$underline = 'true'"><xsl:attribute name="underline" select="'true'"/></xsl:if>
+        </xsl:if>
+
+        <!-- Variable role -->
+        <xsl:variable name="border">
+            <xsl:if test="$border-id != ''">
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:top[@style!='']">
+                    <xsl:value-of select="'bdr_top-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:bottom[@style!='']">
+                    <xsl:value-of select="'bdr_bottom-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:left[@style!='']">
+                    <xsl:value-of select="'bdr_left-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:right[@style!='']">
+                    <xsl:value-of select="'bdr_right-'" />
+                </xsl:if>
+            </xsl:if>
+        </xsl:variable>
+        <xsl:variable name="fill">
+            <xsl:if test="$fill-id != ''">
+                <xsl:if test="$styles/ss:styleSheet/ss:fills/ss:fill[position()= $fill-pos]/ss:patternFill[@patternType !='none']">
+                    <xsl:value-of select="'highlight-'" />
+                </xsl:if>
+            </xsl:if>
+        </xsl:variable>
+        <xsl:variable name="role" select="concat($fill,$border)" />
+        <xsl:if test="$role != ''"><xsl:attribute name="role" select="substring($role, 1, string-length($role) - 1)" /></xsl:if>
+
+          <xsl:choose>
 		    <xsl:when test="$_hasheaders = 'true' and $col/ss:v"><xsl:value-of select="ss:get-value($col)"/></xsl:when>
 		    <xsl:otherwise>Column <xsl:value-of select="."/></xsl:otherwise>
 		  </xsl:choose>
@@ -427,8 +477,59 @@
   <xsl:for-each select="$headers//col">
     <xsl:variable name="ref" select="@ref"/>
     <xsl:variable name="col" select="$row/ss:c[starts-with(@r, $ref)]"/>
+    <xsl:variable name="style-ref" select="if($col/@s) then $col/@s else ''"/>
+    <xsl:variable name="style-ref-pos" select="if($col/@s) then number($col/@s)+1 else ''"/>
+    <xsl:variable name="font-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fontId else ''"/>
+    <xsl:variable name="font-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fontId)+ 1 else ''"/>
+    <xsl:variable name="border-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@borderId else ''"/>
+    <xsl:variable name="border-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@borderId)+ 1 else ''"/>
+    <xsl:variable name="fill-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId else ''"/>
+    <xsl:variable name="fill-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId)+ 1 else ''"/>
+
     <col ref="{@ref}">
-      <xsl:if test="$_hasheaders = 'true' and $_splitlevel = 'row'">
+        <xsl:if test="$style-ref != ''">
+          <xsl:variable name="align" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@horizontal"/>
+          <xsl:variable name="indent" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@indent"/>
+          <xsl:if test="$align != ''"><xsl:attribute name="align" select="$align"/></xsl:if>
+          <xsl:if test="$indent != ''"><xsl:attribute name="indent" select="$indent"/></xsl:if>
+        </xsl:if>
+        <xsl:if test="$font-id != ''">
+            <xsl:variable name="bold" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:b) then 'true' else 'false'"/>
+            <xsl:variable name="italic" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:i) then 'true' else 'false'"/>
+            <xsl:variable name="underline" select="if($styles/ss:styleSheet/ss:fonts/ss:font[position()= $font-pos]/ss:u) then 'true' else 'false'"/>
+            <xsl:if test="$bold = 'true'"><xsl:attribute name="bold" select="'true'"/></xsl:if>
+            <xsl:if test="$italic = 'true'"><xsl:attribute name="italic" select="'true'"/></xsl:if>
+            <xsl:if test="$underline = 'true'"><xsl:attribute name="underline" select="'true'"/></xsl:if>
+        </xsl:if>
+
+        <!-- Variable role -->
+        <xsl:variable name="border">
+            <xsl:if test="$border-id != ''">
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:top[@style!='']">
+                    <xsl:value-of select="'bdr_top-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:bottom[@style!='']">
+                    <xsl:value-of select="'bdr_bottom-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:left[@style!='']">
+                    <xsl:value-of select="'bdr_left-'" />
+                </xsl:if>
+                <xsl:if test="$styles/ss:styleSheet/ss:borders/ss:border[position()= $border-pos]/ss:right[@style!='']">
+                    <xsl:value-of select="'bdr_right-'" />
+                </xsl:if>
+            </xsl:if>
+        </xsl:variable>
+        <xsl:variable name="fill">
+            <xsl:if test="$fill-id != ''">
+                <xsl:if test="$styles/ss:styleSheet/ss:fills/ss:fill[position()= $fill-pos]/ss:patternFill[@patternType !='none']">
+                    <xsl:value-of select="'highlight-'" />
+                </xsl:if>
+            </xsl:if>
+        </xsl:variable>
+        <xsl:variable name="role" select="concat($fill,$border)" />
+        <xsl:if test="$role != ''"><xsl:attribute name="role" select="substring($role, 1, string-length($role) - 1)" /></xsl:if>
+
+        <xsl:if test="$_hasheaders = 'true' and $_splitlevel = 'row'">
         <xsl:variable name="p" select="position()"/>
         <xsl:attribute name="title" select="."/>
       </xsl:if>
