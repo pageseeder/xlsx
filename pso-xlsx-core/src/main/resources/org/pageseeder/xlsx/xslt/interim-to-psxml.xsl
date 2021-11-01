@@ -93,7 +93,9 @@
         <xsl:for-each select="head">
           <row>
             <xsl:for-each select="col">
-              <hcell><xsl:value-of select="."/></hcell>
+              <xsl:apply-templates select=".">
+                  <xsl:with-param name="type" select="'hcell'" />
+              </xsl:apply-templates>
             </xsl:for-each>
           </row>
         </xsl:for-each>
@@ -101,7 +103,9 @@
         <xsl:for-each select="row">
           <row>
             <xsl:for-each select="col">
-              <cell><xsl:value-of select="."/></cell>
+                <xsl:apply-templates select=".">
+                    <xsl:with-param name="type" select="'cell'" />
+                </xsl:apply-templates>
             </xsl:for-each>
           </row>
         </xsl:for-each>
@@ -170,6 +174,111 @@
 	  </body>
 	</section>
 </root>
+</xsl:template>
+
+<!-- Basic Elements -->
+<xsl:template match="col[not(@bold) and not(@italic) and not(@underline)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+       <xsl:apply-templates />
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@bold and not(@italic or @underline)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <bold><xsl:apply-templates /></bold>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@italic and not(@bold or @underline)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <italic><xsl:apply-templates /></italic>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@underline and not(@italic or @bold)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <underline><xsl:apply-templates /></underline>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@italic and @underline and not(@bold)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <italic><underline><xsl:apply-templates /></underline></italic>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@bold and @underline and not(@italic)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <bold><underline><xsl:apply-templates /></underline></bold>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@bold and @italic and not(@underline)]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <bold><italic><xsl:apply-templates /></italic></bold>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template match="col[@bold and @italic and @underline]">
+    <xsl:param name="type" />
+    <xsl:element name="{$type}">
+        <xsl:variable name="align-value" select="if(starts-with(@align,'center')) then 'center'
+                                    else if(starts-with(@align,'right')) then 'right'
+                                    else if(starts-with(@align,'left')) then 'left' else ''" />
+        <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
+        <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
+        <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <bold><italic><underline><xsl:apply-templates /></underline></italic></bold>
+    </xsl:element>
 </xsl:template>
 
 <!-- ========================================================================================== -->
