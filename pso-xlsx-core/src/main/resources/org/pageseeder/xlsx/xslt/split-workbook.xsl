@@ -170,10 +170,15 @@
           <xsl:for-each select="ss:mergeCells/ss:mergeCell">
             <xsl:variable name="starts" select="substring-before(@ref,':')" />
             <xsl:variable name="ends" select="substring-after(@ref,':')" />
+            <xsl:variable name="pos">
+              <xsl:call-template name="get-col-pos">
+                <xsl:with-param name="input" select="$starts" />
+              </xsl:call-template>
+            </xsl:variable>
             <col>
-              <xsl:attribute name="pos" select="substring($starts,2,1)" />
-              <xsl:attribute name="col-starts" select="substring($starts,1,1)" />
-              <xsl:attribute name="col-ends" select="substring($ends,1,1)" />
+              <xsl:attribute name="pos" select="$pos" />
+              <xsl:attribute name="col-starts" select="substring-before($starts,$pos)" />
+              <xsl:attribute name="col-ends" select="substring-before($ends,$pos)" />
             </col>
           </xsl:for-each>
         </xsl:variable>
@@ -275,6 +280,18 @@
 </xsl:text>
   </xsl:template>
 
+  <xsl:template name="get-col-pos">
+    <xsl:param name="input"/>
+    <xsl:if test="string-length($input)">
+      <xsl:variable name="numbers-pos" select="'0123456789'" />
+      <xsl:value-of select="if(string-length(translate(substring($input,2,1), translate(substring($input,2,1), $numbers-pos, ''), '')) &gt; 0)
+                then substring($input,2)
+                else if(string-length(translate(substring($input,3,1), translate(substring($input,3,1), $numbers-pos, ''), '')) &gt; 0)
+                then substring($input,3)
+                else ''" />
+    </xsl:if>
+  </xsl:template>
+
 
   <!-- ========================================================================================== -->
   <!-- FUNCTIONS                                                                                  -->
@@ -285,6 +302,8 @@
 
     @param c The Excel column data.
   -->
+
+
   <xsl:function name="ss:get-value">
     <xsl:param name="c"/>
     <xsl:variable name="cell-value" select="if ($c/@t = 's') then ss:get-share-string($c/ss:v) else $c/ss:v"/>
