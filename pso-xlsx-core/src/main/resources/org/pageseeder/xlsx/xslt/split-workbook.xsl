@@ -506,8 +506,8 @@
 
       <col ref="{$ref}">
         <xsl:if test="$test/col[@pos = $row-pos and (@col-starts = $ref or @col-ends = $ref)]">
-          <xsl:attribute name="merge-col" select="if($test/col[@pos = $row-pos and @col-starts = $ref]) then 'starts-merge'
-                                          else if($test/col[@pos = $row-pos and @col-ends = $ref]) then 'ends-merge' else ''" />
+          <xsl:attribute name="merge-col" select="if($test/col[@pos = $row-pos and @col-starts = $ref]) then 'starts'
+                                          else if($test/col[@pos = $row-pos and @col-ends = $ref]) then 'ends' else ''" />
         </xsl:if>
 
         <xsl:if test="$style-ref != ''">
