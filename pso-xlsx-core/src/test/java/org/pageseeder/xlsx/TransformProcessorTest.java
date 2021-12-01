@@ -8,6 +8,8 @@ import org.pageseeder.xlsx.config.TransformConfigBuilder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TransformProcessorTest {
   private static final String DEFAULT_OUTPUT_ROOT_FOLDER = "/build/output/core";
@@ -73,6 +75,29 @@ public class TransformProcessorTest {
     builder.level(SplitLevel.workbook);
 //    builder.setRowDoctype("row-doc-type");
 //    builder.setSheetDoctype("sheet-doc-type");
+    builder.working(new File(output, "working"));
+    TransformConfig config = builder.build();
+    TransformProcessor processor = new TransformProcessor(config);
+    try {
+      processor.process();
+    } catch (IOException e) {
+      Assert.fail(e.getMessage());
+    }
+    System.out.println(output.getAbsolutePath());
+  }
+
+  @Test
+  public void testInterim_SplitWorksheet_RichtextTrue(){
+    File input = new File("src/test/resources/org/pageseeder/xlsx/core/sample2.xlsx");
+    File output = new File( DEFAULT_OUTPUT_ROOT_FOLDER + "/interim-workbook");
+    TransformConfigBuilder builder = new TransformConfigBuilder();
+    builder.input(input);
+    builder.headers(true);
+    builder.xslt(new File("src/test/resources/org/pageseeder/xlsx/core/copy.xsl"));
+    builder.destination(output);
+    builder.filenameColumn(3);
+    builder.level(SplitLevel.worksheet);
+    builder.richtext(true);
     builder.working(new File(output, "working"));
     TransformConfig config = builder.build();
     TransformProcessor processor = new TransformProcessor(config);
