@@ -241,6 +241,10 @@
         <xsl:variable name="headers" select="ss:get-column-headers(.)"/>
         <xsl:sequence select="$headers" />
         <xsl:variable name="fncol" select="xs:integer($_filenamecolumn)"/>
+        <!-- TODO - Merge conversion -->
+        <xsl:variable name="merge">
+          <col></col>
+        </xsl:variable>
         <!-- Process each row -->
         <xsl:for-each select="ss:sheetData/ss:row[if ($_hasheaders = 'true') then position() gt 1 else position() ge 1]">
           <xsl:variable name="filename" select="if ($fncol gt 0 and $fncol le count(ss:c))
@@ -250,7 +254,7 @@
           <xsl:result-document href="{$_outputfolder}{$folder}/{$filename}.xml" method="xml" encoding="utf-8" indent="yes">
             <xsl:call-template name="header-comment"/>
             <row position="{@r}" title="{$filename}" sheet-title="{$title}" book-title="{$_booktitle}">
-              <xsl:sequence select="ss:get-columns(., $headers, @r,'')"/>
+              <xsl:sequence select="ss:get-columns(., $headers, @r, $merge)"/>
             </row>
           </xsl:result-document>
         </xsl:for-each>
@@ -510,7 +514,7 @@
     <xsl:param name="row"     as="element(ss:row)"/>
     <xsl:param name="headers" as="element(head)"/>
     <xsl:param name="row-pos" />
-    <xsl:param name="test" />
+    <xsl:param name="merge" />
     <xsl:for-each select="$headers//col">
       <xsl:variable name="ref" select="@ref"/>
       <xsl:variable name="col" select="$row/ss:c[starts-with(@r, $ref)]"/>
@@ -524,9 +528,9 @@
       <xsl:variable name="fill-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId)+ 1 else ''"/>
 
       <col ref="{$ref}">
-        <xsl:if test="$test/col[@pos = $row-pos and (@col-starts = $ref or @col-ends = $ref)]">
-          <xsl:attribute name="merge-col" select="if($test/col[@pos = $row-pos and @col-starts = $ref]) then 'starts'
-                                          else if($test/col[@pos = $row-pos and @col-ends = $ref]) then 'ends' else ''" />
+        <xsl:if test="$merge/col[@pos = $row-pos and (@col-starts = $ref or @col-ends = $ref)]">
+          <xsl:attribute name="merge-col" select="if($merge/col[@pos = $row-pos and @col-starts = $ref]) then 'starts'
+                                          else if($merge/col[@pos = $row-pos and @col-ends = $ref]) then 'ends' else ''" />
         </xsl:if>
 
         <xsl:if test="$style-ref != ''">
