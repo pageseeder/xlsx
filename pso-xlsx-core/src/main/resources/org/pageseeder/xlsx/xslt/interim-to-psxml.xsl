@@ -186,6 +186,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
        <xsl:apply-templates />
     </xsl:element>
 </xsl:template>
@@ -199,6 +200,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <bold><xsl:apply-templates /></bold>
     </xsl:element>
 </xsl:template>
@@ -212,6 +214,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <italic><xsl:apply-templates /></italic>
     </xsl:element>
 </xsl:template>
@@ -225,6 +228,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <underline><xsl:apply-templates /></underline>
     </xsl:element>
 </xsl:template>
@@ -238,6 +242,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <italic><underline><xsl:apply-templates /></underline></italic>
     </xsl:element>
 </xsl:template>
@@ -251,6 +256,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <bold><underline><xsl:apply-templates /></underline></bold>
     </xsl:element>
 </xsl:template>
@@ -264,6 +270,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <bold><italic><xsl:apply-templates /></italic></bold>
     </xsl:element>
 </xsl:template>
@@ -277,6 +284,7 @@
         <xsl:if test="@align and $align-value!= ''"><xsl:attribute name="align" select="$align-value" /></xsl:if>
         <xsl:if test="@role"><xsl:attribute name="role" select="@role" /></xsl:if>
         <xsl:if test="@indent"><inline label="indent"><xsl:value-of select="@indent" /></inline></xsl:if>
+        <xsl:if test="@merge-col"><xsl:attribute name="merge-col" select="@merge-col" /></xsl:if>
         <bold><italic><underline><xsl:apply-templates /></underline></italic></bold>
     </xsl:element>
 </xsl:template>
