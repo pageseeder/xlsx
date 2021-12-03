@@ -107,7 +107,7 @@
           <!-- Process each row -->
           <xsl:for-each select="ss:sheetData/ss:row[if ($_hasheaders = 'true') then position() gt 1 else position() ge 1]">
             <row position="{@r}">
-              <xsl:sequence select="ss:get-columns(., $headers)"/>
+              <xsl:sequence select="ss:get-columns(., $headers, @r,'')"/>
             </row>
           </xsl:for-each>
         </worksheet>
@@ -164,11 +164,30 @@
       <worksheet title="{$title}" book-title="{$_booktitle}">
         <!-- Grab the titles from the first row -->
         <xsl:variable name="headers" select="ss:get-column-headers(.)"/>
+
+        <!-- Merge cols reference -->
+        <xsl:variable name="merge">
+          <xsl:for-each select="ss:mergeCells/ss:mergeCell">
+            <xsl:variable name="starts" select="substring-before(@ref,':')" />
+            <xsl:variable name="ends" select="substring-after(@ref,':')" />
+            <xsl:variable name="pos">
+              <xsl:call-template name="get-col-pos">
+                <xsl:with-param name="input" select="$starts" />
+              </xsl:call-template>
+            </xsl:variable>
+            <col>
+              <xsl:attribute name="pos" select="$pos" />
+              <xsl:attribute name="col-starts" select="substring-before($starts,$pos)" />
+              <xsl:attribute name="col-ends" select="substring-before($ends,$pos)" />
+            </col>
+          </xsl:for-each>
+        </xsl:variable>
+
         <xsl:sequence select="$headers" />
         <!-- Process each row -->
         <xsl:for-each select="ss:sheetData/ss:row[if ($_hasheaders = 'true') then position() gt 1 else position() ge 1]">
           <row position="{@r}">
-            <xsl:sequence select="ss:get-columns(., $headers)"/>
+            <xsl:sequence select="ss:get-columns(., $headers, @r, $merge)"/>
           </row>
         </xsl:for-each>
       </worksheet>
@@ -222,6 +241,10 @@
         <xsl:variable name="headers" select="ss:get-column-headers(.)"/>
         <xsl:sequence select="$headers" />
         <xsl:variable name="fncol" select="xs:integer($_filenamecolumn)"/>
+        <!-- TODO - Merge conversion -->
+        <xsl:variable name="merge">
+          <col></col>
+        </xsl:variable>
         <!-- Process each row -->
         <xsl:for-each select="ss:sheetData/ss:row[if ($_hasheaders = 'true') then position() gt 1 else position() ge 1]">
           <xsl:variable name="filename" select="if ($fncol gt 0 and $fncol le count(ss:c))
@@ -231,7 +254,7 @@
           <xsl:result-document href="{$_outputfolder}{$folder}/{$filename}.xml" method="xml" encoding="utf-8" indent="yes">
             <xsl:call-template name="header-comment"/>
             <row position="{@r}" title="{$filename}" sheet-title="{$title}" book-title="{$_booktitle}">
-              <xsl:sequence select="ss:get-columns(., $headers)"/>
+              <xsl:sequence select="ss:get-columns(., $headers, @r, $merge)"/>
             </row>
           </xsl:result-document>
         </xsl:for-each>
@@ -261,6 +284,18 @@
 </xsl:text>
   </xsl:template>
 
+  <xsl:template name="get-col-pos">
+    <xsl:param name="input"/>
+    <xsl:if test="string-length($input)">
+      <xsl:variable name="numbers-pos" select="'0123456789'" />
+      <xsl:value-of select="if(string-length(translate(substring($input,2,1), translate(substring($input,2,1), $numbers-pos, ''), '')) &gt; 0)
+                then substring($input,2)
+                else if(string-length(translate(substring($input,3,1), translate(substring($input,3,1), $numbers-pos, ''), '')) &gt; 0)
+                then substring($input,3)
+                else ''" />
+    </xsl:if>
+  </xsl:template>
+
 
   <!-- ========================================================================================== -->
   <!-- FUNCTIONS                                                                                  -->
@@ -271,6 +306,8 @@
 
     @param c The Excel column data.
   -->
+
+
   <xsl:function name="ss:get-value">
     <xsl:param name="c"/>
     <xsl:variable name="cell-value" select="if ($c/@t = 's') then ss:get-share-string($c/ss:v) else $c/ss:v"/>
@@ -476,6 +513,8 @@
   <xsl:function name="ss:get-columns">
     <xsl:param name="row"     as="element(ss:row)"/>
     <xsl:param name="headers" as="element(head)"/>
+    <xsl:param name="row-pos" />
+    <xsl:param name="merge" />
     <xsl:for-each select="$headers//col">
       <xsl:variable name="ref" select="@ref"/>
       <xsl:variable name="col" select="$row/ss:c[starts-with(@r, $ref)]"/>
@@ -488,7 +527,12 @@
       <xsl:variable name="fill-id" select="if($style-ref != '') then $styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId else ''"/>
       <xsl:variable name="fill-pos" select="if($style-ref != '') then number($styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/@fillId)+ 1 else ''"/>
 
-      <col ref="{@ref}">
+      <col ref="{$ref}">
+        <xsl:if test="$merge/col[@pos = $row-pos and (@col-starts = $ref or @col-ends = $ref)]">
+          <xsl:attribute name="merge-col" select="if($merge/col[@pos = $row-pos and @col-starts = $ref]) then 'starts'
+                                          else if($merge/col[@pos = $row-pos and @col-ends = $ref]) then 'ends' else ''" />
+        </xsl:if>
+
         <xsl:if test="$style-ref != ''">
           <xsl:variable name="align" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@horizontal"/>
           <xsl:variable name="indent" select="$styles/ss:styleSheet/ss:cellXfs/ss:xf[position()=$style-ref-pos]/ss:alignment/@indent"/>
